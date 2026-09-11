@@ -143,9 +143,9 @@ class CaloCellBuilder( Logger ):
                                 InputCollectionKey    = samp.CollectionKey + "_Aux",
                                 OutputCollectionKey   = samp.CollectionKey,
                                 MinEnergy             = CrossTalkFlags.MinEnergy,
-                                AmpCapacitive         = CaloFlags.AmpCapacitive,
-                                AmpInductive          = CaloFlags.AmpInductive,
-                                AmpResistive          = CaloFlags.AmpResistive,
+                                AmpCapacitive         = CrossTalkFlags.AmpCapacitive,
+                                AmpInductive          = CrossTalkFlags.AmpInductive,
+                                AmpResistive          = CrossTalkFlags.AmpResistive,
                                 HistogramPath         = self.HistogramPath + '/CrossTalk',
                                 OutputLevel           = self.OutputLevel
                              )
