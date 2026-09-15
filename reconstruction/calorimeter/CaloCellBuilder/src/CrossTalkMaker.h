@@ -55,12 +55,12 @@ class CrossTalkMaker : public Gaugi::Algorithm
 
     double  XTalk(double x, bool type) const;
     double  CellFunction(double x, bool type) const;
-    float   XTalkTF( float sample, int samp_index, bool diagonal, bool inductive) const;
+    float   XTalkTF( float sample, int samp_index, bool diagonal, bool inductive, float cap_xt_amp, float ind_xt_amp) const;
 
     /*! The tool list that will be executed into the post execute step */
     std::vector< Gaugi::AlgTool* > m_toolHandles;
 
-    float m_minEnergy;
+    float m_sigmaNoiseCut;
     std::string m_collectionKey;
     std::string m_xtcollectionKey;
     std::string m_histPath;
@@ -88,6 +88,8 @@ class CrossTalkMaker : public Gaugi::Algorithm
     double m_AmpXt_C; //4.2/100  ;
     double m_AmpXt_L; //2.3/100  ;       // XTalk amplitude on % values of the Energy
     double m_AmpXt_R; //1.0/100  ;       // XTalk amplitude on % values of the Energy
+    double m_RMSXt_C; // Standard deviation for Cap XT RNG
+    double m_RMSXt_L; // Standard deviation for Ind XT RNG
     double m_AmpNoise  = 50 ;             // Noise amplitude 50 MeV
     double tau_0_mean  = 0 ;
     double tau_std     = 0.5 ;

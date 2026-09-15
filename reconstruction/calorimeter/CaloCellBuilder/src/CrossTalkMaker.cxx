@@ -9,7 +9,7 @@
 #include "G4SystemOfUnits.hh"
 
 #include <map>
-
+#include <random>
 
 using namespace Gaugi;
 
@@ -33,12 +33,14 @@ CrossTalkMaker::CrossTalkMaker( std::string name ) :
 
   declareProperty( "InputCollectionKey"     , m_collectionKey="Cells"               ); // input
   declareProperty( "OutputCollectionKey"    , m_xtcollectionKey="XTCells"           ); // output
-  declareProperty( "MinEnergy"              , m_minEnergy=1*GeV                     );
-  declareProperty( "HistogramPath"          , m_histPath="/CrossTalkMakerSimulator"      );
+  declareProperty( "SigmaNoiseCut"          , m_minEnergy=1*GeV                     );
+  declareProperty( "HistogramPath"          , m_histPath="/CrossTalkMakerSimulator" );
   declareProperty( "OutputLevel"            , m_outputLevel=1                       );
   declareProperty( "AmpCapacitive"          , m_AmpXt_C=4.2                         );
   declareProperty( "AmpInductive"           , m_AmpXt_L=2.3                         );
   declareProperty( "AmpResistive"           , m_AmpXt_R=1.0                         );
+  declareProperty( "XtStdDevCap"            , m_RMSXt_C=0.25                        );
+  declareProperty( "XtStdDevInd"            , m_RMSXt_L=0.25                        );
 }\
 
 //!=====================================================================
@@ -292,11 +294,13 @@ StatusCode CrossTalkMaker::post_execute( SG::EventContext &/*ctx*/ ) const
 }
 
 
-float CrossTalkMaker::XTalkTF(float sample, int samp_index, bool diagonal, bool inductive) const
+float CrossTalkMaker::XTalkTF(float sample, int samp_index, bool diagonal, bool inductive, float cap_xt_amp, float ind_xt_amp) const
 {
 
-  float BaseAmpXTc = m_AmpXt_C/100*sample ;
-  float BaseAmpXTl = m_AmpXt_L/100*sample ;
+  // float BaseAmpXTc = m_AmpXt_C/100*sample ;
+  // float BaseAmpXTl = m_AmpXt_L/100*sample ;
+  float BaseAmpXTc = cap_xt_amp/100*sample ;
+  float BaseAmpXTl = ind_xt_amp/100*sample ;
   // float BaseAmpXTr = m_AmpXt_R*sample ;
   float XTcSamples = BaseAmpXTc * XTalk       (25*(samp_index+1) , false ); //+ delayPerCell[cell] + m_tau_0, false ) ) ;
   float XTlSamples = BaseAmpXTl * XTalk       (25*(samp_index+1) , false ); //+ delayPerCell[cell] + m_tau_0, false ) ) ;

@@ -10,10 +10,12 @@ class CrossTalkMaker( Cpp ):
   def __init__( self, name          : str, 
                 InputCollectionKey  : str="Cells",
                 OutputCollectionKey : str="XTCells",
-                MinEnergy           : float=flags.MinEnergy,
+                SigmaNoiseCut       : float=flags.SigmaNoiseCut,
                 AmpCapacitive       : float=flags.AmpCapacitive,
                 AmpInductive        : float=flags.AmpInductive,
                 AmpResistive        : float=flags.AmpResistive,
+                XtStdDevCap         : float=flags.XtStdDevCap,
+                XtStdDevInd         : float=flags.XtStdDevInd,
                 HistogramPath       : str="/CrossTalkMaker",
                 OutputLevel         : int=LoggingLevel.toC('INFO'),
                 ):
@@ -23,10 +25,12 @@ class CrossTalkMaker( Cpp ):
     self.setProperty( "OutputLevel"           , OutputLevel         )
     self.setProperty( "InputCollectionKey"    , InputCollectionKey  )
     self.setProperty( "OutputCollectionKey"   , OutputCollectionKey )
-    self.setProperty( "MinEnergy"             , MinEnergy           )
+    self.setProperty( "SigmaNoiseCut"         , SigmaNoiseCut       )
     self.setProperty( "AmpCapacitive"         , AmpCapacitive       )
     self.setProperty( "AmpInductive"          , AmpInductive        )
     self.setProperty( "AmpResistive"          , AmpResistive        )
+    self.setProperty( "XtStdDevCap"           , XtStdDevCap         )
+    self.setProperty( "XtStdDevInd"           , XtStdDevInd         )
     self.setProperty( "HistogramPath"         , HistogramPath       )
 
  

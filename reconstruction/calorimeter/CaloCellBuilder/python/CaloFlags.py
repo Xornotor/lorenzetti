@@ -18,10 +18,12 @@ class CaloFlags(EnumStringification):
     
     
 class CrossTalkFlags(EnumStringification):
-    MinEnergy         = 1*GeV
+    SigmaNoiseCut     = 1*GeV
     AmpCapacitive     = 4.2
     AmpInductive      = 2.3
     AmpResistive      = 1.0
+    XtStdDevCap       = 0.25
+    XtStdDevInd       = 0.25
     
 class AnomalyFlags(EnumStringification):
     BadRunListFile   = ""

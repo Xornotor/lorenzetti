@@ -142,10 +142,12 @@ class CaloCellBuilder( Logger ):
           cx = CrossTalkMaker( "CrossTalkMaker_" + samp.CollectionKey,
                                 InputCollectionKey    = samp.CollectionKey + "_Aux",
                                 OutputCollectionKey   = samp.CollectionKey,
-                                MinEnergy             = CrossTalkFlags.MinEnergy,
+                                SigmaNoiseCut         = CrossTalkFlags.SigmaNoiseCut,
                                 AmpCapacitive         = CrossTalkFlags.AmpCapacitive,
                                 AmpInductive          = CrossTalkFlags.AmpInductive,
                                 AmpResistive          = CrossTalkFlags.AmpResistive,
+                                XtStdDevCap           = CrossTalkFlags.XtStdDevCap,
+                                XtStdDevInd           = CrossTalkFlags.XtStdDevInd,
                                 HistogramPath         = self.HistogramPath + '/CrossTalk',
                                 OutputLevel           = self.OutputLevel
                              )
