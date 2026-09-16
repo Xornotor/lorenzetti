@@ -5,6 +5,7 @@
 #include "CaloCell/CaloDetDescriptorCollection.h"
 #include "G4Kernel/CaloPhiRange.h"
 #include "G4Kernel/constants.h"
+#include "CaloCell/enumeration.h"
 
 #include "G4SystemOfUnits.hh"
 
@@ -33,7 +34,7 @@ CrossTalkMaker::CrossTalkMaker( std::string name ) :
 
   declareProperty( "InputCollectionKey"     , m_collectionKey="Cells"               ); // input
   declareProperty( "OutputCollectionKey"    , m_xtcollectionKey="XTCells"           ); // output
-  declareProperty( "SigmaNoiseCut"          , m_minEnergy=1*GeV                     );
+  declareProperty( "SigmaNoiseCut"          , m_sigmaNoiseCut=1*GeV                     );
   declareProperty( "HistogramPath"          , m_histPath="/CrossTalkMakerSimulator" );
   declareProperty( "OutputLevel"            , m_outputLevel=1                       );
   declareProperty( "AmpCapacitive"          , m_AmpXt_C=4.2                         );
@@ -109,14 +110,20 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
   std::vector < float > samples_signal       ;
   std::vector < float > samples_signal_xtalk ;
 
+  std::random_device rd; // random device class instance, source of 'true' randomness for initializing random seed  
+  std::mt19937 gen(rd()); // Mersenne twister PRNG, initialized with seed from previous random device instance
+
   SG::ReadHandle<xAOD::CaloDetDescriptorCollection> collection( m_collectionKey, ctx );
-
-
 
   MSG_INFO( "Creating reco XT cells containers with key " << m_xtcollectionKey);
   SG::WriteHandle<xAOD::CaloDetDescriptorCollection> xtCollection( m_xtcollectionKey , ctx );
   xtCollection.record( std::unique_ptr<xAOD::CaloDetDescriptorCollection>(new xAOD::CaloDetDescriptorCollection()) );
   
+  // create xt energy excess container for further corrections
+  SG::WriteHandle<xAOD::CaloDetDescriptorCollection> xtEneExcess( "XTDescriptorEneExcess" , ctx );
+  xtEneExcess.record( std::unique_ptr<xAOD::CaloDetDescriptorCollection>(new xAOD::CaloDetDescriptorCollection()) );
+  
+  MSG_DEBUG("Before execution: collection.size: "<< collection->operator*().size() << ", xtCollection.size(): "<< xtCollection->operator*().size());
 
 
   // loop over ordinary cell container
@@ -125,14 +132,14 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
     auto descriptor = pair.second;
     xAOD::CaloDetDescriptor *xtdescriptor = descriptor->copy();
 
-    // Step 1: check if we need to apply cx method for current cell. Only for cells higher than
-    // min energy. Here, lets use the truth energy from the main bunch crossing.
-    bool bCrossTalkMakerConditions = ( !(xtdescriptor->edep() < m_minEnergy) && !(xtdescriptor->pulse().size() == 0) && !((xtdescriptor->sampling() != 3) && (xtdescriptor->sampling()  != 12)) );
+    auto pulseBefore  = descriptor->pulse();
+    auto energyBefore = descriptor->e();
 
-    
-    // if (descriptor->edep() < m_minEnergy) continue;
-    // if (descriptor->pulse().size() == 0) continue;
-    // if ((descriptor->sampling() != 3) && (descriptor->sampling()  != 12)) continue;
+    // Step 1: check if we need to apply cx method for current cell. Only for cells higher than
+    // min energy. Here, lets use the truth energy from the main bunch crossing
+    // 
+    // BEFORE: m_SigmaNoiseCut*xtdescriptor->noise().
+    bool bCrossTalkMakerConditions = ( !(xtdescriptor->edep() < m_sigmaNoiseCut) && !(xtdescriptor->pulse().size() == 0) && !((xtdescriptor->sampling() != CaloSampling(EMB2)) && (xtdescriptor->sampling() != CaloSampling(EMEC2))) );
 
     // ------------------------------------------------------------------------------
     // If there IS xtalk conditions, apply XT model to cell 1st neighbors,
@@ -155,7 +162,8 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
         auto neighborDescriptor = pairAround.second;
         if ( neighborDescriptor->pulse().size() == 0) continue; // protection: if there is no pulseShape, skip that cell. 
         if ( xtdescriptor->sampling() != neighborDescriptor->sampling() ) continue;  // cells_around must belong to the same sampling of central_cell
-        if ( xtdescriptor == neighborDescriptor) continue; // central_cell must not belong to cells_around
+        if ( xtdescriptor->hash() == neighborDescriptor->hash()) continue; // central_cell must not belong to cells_around
+       
         // build a 3x3 window around the central cell
         float diffEta = std::abs( xtdescriptor->eta() - neighborDescriptor->eta() );
         float diffPhi = std::abs( CaloPhiRange::fix( xtdescriptor->phi() - neighborDescriptor->phi() ) );
@@ -166,8 +174,17 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
 
       // Step 3: Loop over cells_around to extract xtalk effect from the central_cell surroundings.
       std::vector<float> final_xt_pulse(5);
+      std::vector<float> leaked_xt_pulse(5);
 
       for (auto cell : cells_around){
+
+        // Compute XT amplitude values with uncertainties (in %)
+        std::normal_distribution<float> cap_amp_normal( m_AmpXt_C , m_RMSXt_C );
+        std::normal_distribution<float> ind_amp_normal( m_AmpXt_L , m_RMSXt_L );
+
+        // get random number with normal distribution using gen as random source
+        float leakedXTAmp_cap = cap_amp_normal(gen);
+        float leakedXTAmp_ind = ind_amp_normal(gen);
     
         auto pulseCellXT = cell->pulse();
         std::vector<float> neighbor_xt_pulse;
@@ -178,21 +195,25 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
         {
           for (unsigned samp_index=0; samp_index<5; ++samp_index)
           {
-            distorted_sample_ind = XTalkTF( pulseCellXT[samp_index],samp_index,true, true);
+            distorted_sample_ind = XTalkTF(pulseCellXT[samp_index], samp_index, true, true, leakedXTAmp_cap, leakedXTAmp_ind);
             distorted_sample_cap = 0; // there is no capacitive cross-talk effect in the cell diagonal
             samples_xtalk_ind.push_back(distorted_sample_ind); // histogram
             samples_xtalk_cap.push_back(distorted_sample_cap);  // histogram
             neighbor_xt_pulse.push_back(distorted_sample_ind + distorted_sample_cap);
+            // leaked_xt_pulse[samp_index] = pulseCellXT[samp_index]*m_AmpXt_L/100; // it leaks using the same pulse shape.
+            leaked_xt_pulse[samp_index] = pulseCellXT[samp_index]*leakedXTAmp_ind/100; // it leaks using the same pulse shape.
           }
         }else {
           // case 2: is inside central cross position        
           for (int samp_index=0; samp_index<5; samp_index++)
           {
-            distorted_sample_ind = XTalkTF( pulseCellXT[samp_index],samp_index,true, true);
-            distorted_sample_cap = XTalkTF( pulseCellXT[samp_index],samp_index,true, false);
+            distorted_sample_ind = XTalkTF(pulseCellXT[samp_index], samp_index, true, true, leakedXTAmp_cap, leakedXTAmp_ind);
+            distorted_sample_cap = XTalkTF(pulseCellXT[samp_index], samp_index, true, false, leakedXTAmp_cap, leakedXTAmp_ind);
             samples_xtalk_ind.push_back(distorted_sample_ind); // histogram
             samples_xtalk_cap.push_back(distorted_sample_cap); // histogram
             neighbor_xt_pulse.push_back(distorted_sample_ind + distorted_sample_cap);
+
+            leaked_xt_pulse[samp_index] = pulseCellXT[samp_index]*leakedXTAmp_ind/100 + pulseCellXT[samp_index]*leakedXTAmp_cap/100; // it leaks using the same pulse shape (for correction).
           }
         }
 
@@ -201,13 +222,12 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
           final_xt_pulse[i] += neighbor_xt_pulse[i];
         }
 
+        // TODO: Step 4: Energy Conservation Correction
+
       }// end-for in cells_around
 
-
-      // Step 4: add total pulse distortion from neighbor cells into the central cell of the 3x3 window.
-      auto centralCellPulse = descriptor->pulse(); 
-      auto pulseBefore      = descriptor->pulse();
-      auto energyBefore     = descriptor->e();
+      // Step 5: add total pulse distortion from neighbor cells into the central cell of the 3x3 window.
+      auto centralCellPulse = xtdescriptor->pulse(); 
 
       for (int i=0; i<5; i++)
       {
@@ -216,10 +236,11 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
         samples_signal_xtalk.push_back(centralCellPulse[i]); // add to fillHistograms
       }
 
-      // Step 5: change pulse value of central cell of the 3x3 window with adjacent xtalk effects.
-      descriptor->setPulse(centralCellPulse);
+      // Step 6: change pulse value of central cell of the 3x3 window with adjacent xtalk effects.
+      xtdescriptor->setPulse(centralCellPulse);
 
-      // Step 6: Call for Estimation Methods tool (or any other tool applied into cells, AFTER pulse generation.)
+      // Step 7: Call for Estimation Methods tool (or any other tool applied into cells, AFTER pulse generation.)
+      /*
       for ( auto tool : m_toolHandles )
       {
         // digitalization
@@ -235,6 +256,9 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
       // fillHistograms( ctx, samples_xtalk_ind, samples_xtalk_cap, samples_signal, samples_signal_xtalk );
       MSG_DEBUG(" e: "<< energyBefore <<"  Pulse before: " << pulseBefore[0] << "   "<< pulseBefore[1] << "   "<< pulseBefore[2] << "   "<< pulseBefore[3] << "   "<< pulseBefore[4]);
       MSG_DEBUG(" e_xt: "<< energyAfter <<"  Pulse after: " << pulseAfter[0] << "   "<< pulseAfter[1] << "   "<< pulseAfter[2] << "   "<< pulseAfter[3] << "   "<< pulseAfter[4]);
+      */
+      MSG_DEBUG("Cell "<< descriptor->hash() <<", sampling "<< descriptor->sampling() <<", pulse() = "<< descriptor->pulse() << ", edep/tof= "<< descriptor->edep() <<"/"<< descriptor->tof() <<", e/tau=" << descriptor->tau() << "/"<< descriptor->e() );
+      
 
       samples_xtalk_ind.clear();
       samples_xtalk_cap.clear();
@@ -246,9 +270,11 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
     // If there is NO xtalk conditions, add the cell normally into new XT Container.
     //  Look, here, the current descriptor hasn't been changed.
     // -------------------------------------------------------------------------------
-    if ( !xtCollection->insert( descriptor->hash(), descriptor ) ){
-        MSG_FATAL( "It is not possible to include cell hash ("<< descriptor->hash() << ") into the collection. hash already exist.");
+    if ( !xtCollection->insert( xtdescriptor->hash(), xtdescriptor ) ){
+        MSG_FATAL( "It is not possible to include cell hash ("<< xtdescriptor->hash() << ") into the collection. Hash already exist.");
     }
+
+    // TODO: Extra steps: correct for charge excess and call for Estimation Methods Model?
 
   }
 
