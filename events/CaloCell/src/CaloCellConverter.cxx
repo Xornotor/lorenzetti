@@ -31,6 +31,6 @@ bool CaloCellConverter::convert( const CaloCell_t &cell_t, CaloCell *&cell )
                              cell_t.dphi );
   cell->setE(cell_t.e); // estimated energy from OF. Same as descriptor->e()
   cell->setEt(cell_t.et); // estimated transverse energy from OF
-  cell->setTau(cell_t.tau);
+  cell->setTau(cell_t.tau); // estimated time of flight from OF. Same as descriptor->tau()     
   return true;
 }

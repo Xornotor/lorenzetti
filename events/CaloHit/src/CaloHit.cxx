@@ -30,8 +30,7 @@ CaloHit::CaloHit(     float eta,
   m_bcid_start(bcid_start),
   m_bcid_end(bcid_end),
   m_bc_duration(bc_duration),
-  m_hash(hash),
-  m_firstHit(false)
+  m_hash(hash)
 {
   // Initalize the time vector using the bunch crossing informations
   float start = ( m_bcid_start - 0.5 ) * m_bc_duration;
@@ -44,7 +43,8 @@ CaloHit::CaloHit(     float eta,
 
 void CaloHit::clear()
 {
-  m_edep.clear(); // zeroize deposit energy for all bunchs
+  m_edep.clear(); // zeroize deposit energy for all bunches
+  m_tof.clear(); // clear tof for all the bunches
 }
 
 
@@ -56,6 +56,7 @@ void CaloHit::fill( const G4Step* step )
   G4StepPoint* point = step->GetPreStepPoint();
   // Get the particle time
   float t = (float)point->GetGlobalTime() / ns;
+  float t_corrected = (point->GetGlobalTime() - (point->GetPosition().mag()/c_light) )/ ns; // rough correction for event-clock relative tof
 
   // Get the bin index into the time vector
   int samp = find(t);
@@ -65,7 +66,14 @@ void CaloHit::fill( const G4Step* step )
     // cout << "sampling: "<< m_sampling << ", BCID: "<< bcid << ", samp: " << samp << ", HIT: " << m_hash << ", t: " << t << ", edep: "<< edep << ", m_edep[bcid]="<< m_edep[bcid] << ", m_tof[bcid]="<< m_tof[bcid] << "\n"; // 
 
     m_edep[bcid]  +=  (edep/MeV);
-    m_tof[bcid]   =   t; // the TOF comes from the last hit
+    // m_tof[bcid]   =   t; // the TOF comes from the last hit
+    if ((m_edep[bcid] > 0.) && (!m_firstHit)){
+      m_tof[bcid]   = t_corrected;   // the TOF comes from the first hit
+      m_firstHit    = true;
+    }
+    else if ((m_edep[bcid] > 0.) && (t_corrected < m_tof[bcid]) ){
+      m_tof[bcid]   = t_corrected;   // the TOF comes from the first hit (in time)
+    }
 
   }
 }
@@ -77,6 +85,7 @@ void CaloHit::fill( const G4Step* step , float sampNoiseStd)
   G4StepPoint* point = step->GetPreStepPoint();
   // Get the particle time
   float t = (float)point->GetGlobalTime() / ns;
+  float t_corrected = (point->GetGlobalTime() - (point->GetPosition().mag()/c_light) )/ ns; // rough correction for event-clock relative tof
 
   // Get the bin index into the time vector
   int samp = find(t);
@@ -87,13 +96,14 @@ void CaloHit::fill( const G4Step* step , float sampNoiseStd)
 
     m_edep[bcid]+=(edep/MeV);
 
-    if ((m_edep[bcid] > sampNoiseStd/MeV) && !m_firstHit){
-      m_tof[bcid] = t; // the TOF comes from the FIRST sensible hit that allows to readout the cell energy, above n*sigmaNoise (n=1)
-      m_firstHit  = true;
+    if ((m_edep[bcid] >= sampNoiseStd/MeV) && !m_firstHit){
+      m_tof[bcid]   = t_corrected;   // the TOF comes from the first hit
+      m_firstHit    = true;
       // cout << "energy higher than "<< sampNoiseStd <<" MeV: tof="<< t<<"\n";
     }
-    else if ((m_edep[bcid] <= sampNoiseStd/MeV) && !m_firstHit){
-      m_tof[bcid] = 0.0;
+    else if ((m_edep[bcid] >= sampNoiseStd/MeV) && (t_corrected < m_tof[bcid])){
+      // m_tof[bcid] = 0.0;
+      m_tof[bcid]   = t_corrected;   // the TOF comes from the first hit (in time)
     }
     // else if (m_firstHit){
     //   cout << "first hit TOF already saved. tof="<< m_tof[bcid] <<"\n";
