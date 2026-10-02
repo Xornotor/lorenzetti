@@ -121,7 +121,8 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
   xtCollection.record( std::unique_ptr<xAOD::CaloDetDescriptorCollection>(new xAOD::CaloDetDescriptorCollection()) );
   
   // create xt energy excess container for further corrections
-  SG::WriteHandle<xAOD::CaloDetDescriptorCollection> xtEneExcess( "XTDescriptorEneExcess" , ctx );
+  std::string ene_excess_key = "XTDescriptorEneExcess_" + m_xtcollectionKey;
+  SG::WriteHandle<xAOD::CaloDetDescriptorCollection> xtEneExcess( ene_excess_key , ctx );
   xtEneExcess.record( std::unique_ptr<xAOD::CaloDetDescriptorCollection>(new xAOD::CaloDetDescriptorCollection()) );
   
   MSG_DEBUG("Before execution: collection.size: "<< collection->operator*().size() << ", xtCollection.size(): "<< xtCollection->operator*().size());
@@ -292,7 +293,7 @@ StatusCode CrossTalkMaker::execute( SG::EventContext &ctx , int /*evt*/ ) const
     xAOD::CaloDetDescriptor *excessDescriptor = nullptr;
 
     if ( !xtEneExcess->retrieve( xtdescriptor->hash() , excessDescriptor) ){
-      MSG_ERROR("Cannot find hash "<< xtdescriptor->hash()  << " on EnergyExcess Collection!");
+      //MSG_ERROR("Cannot find hash "<< xtdescriptor->hash()  << " on EnergyExcess Collection!");
       continue;
     }
 

@@ -6,6 +6,7 @@ valid_keys = [
     # CaloCellMerge
     "Cells",
     "TruthCells",
+    "XTCells",
     # CaloClusterMaker
     "Events",
     "Seeds",

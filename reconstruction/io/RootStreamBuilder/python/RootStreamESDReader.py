@@ -7,12 +7,14 @@ import ROOT
 class RootStreamESDReader( Cpp ):
 
   def __init__( self, name,
+                InputFile           : str,
                 OutputEventKey      : str,
                 OutputTruthKey      : str,
                 OutputCellsKey      : str,
                 OutputCellsTruthKey : str,
                 OutputSeedsKey      : str,
-                InputFile           : str,
+                OutputXTCellsKey    : str,
+                DumpCrossTalkCells  : bool,
                 OutputLevel         : int=0, 
                 NtupleName          : str="CollectionTree",
               ): 
@@ -23,6 +25,8 @@ class RootStreamESDReader( Cpp ):
     self.setProperty( "OutputCellsKey"      , OutputCellsKey      )
     self.setProperty( "OutputCellsTruthKey" , OutputCellsTruthKey )
     self.setProperty( "OutputSeedsKey"      , OutputSeedsKey      )
+    self.setProperty( "OutputXTCellsKey"    , OutputXTCellsKey    )
+    self.setProperty( "DumpCrossTalkCells"  , DumpCrossTalkCells  )
     self.setProperty( "OutputLevel"         , OutputLevel         ) 
     self.setProperty( "NtupleName"          , NtupleName          )
     self.setProperty( "InputFile"           , InputFile           )

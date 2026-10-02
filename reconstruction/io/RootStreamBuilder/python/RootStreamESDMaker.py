@@ -12,12 +12,15 @@ class RootStreamESDMaker( Cpp ):
                 InputTruthKey       : str,
                 InputCellsKey       : str,
                 InputSeedsKey       : str,
+                InputXTCellsKey     : str,
                 InputCellsTruthKey  : str,
                 OutputEventKey      : str=None,
                 OutputTruthKey      : str=None,
                 OutputCellsKey      : str=None,
                 OutputSeedsKey      : str=None,
+                OutputXTCellsKey    : str=None,
                 OutputCellsTruthKey : str=None,
+                DumpCrossTalkCells  : bool=False,
                 OutputLevel         : int=0, 
                 NtupleName          : str="CollectionTree",
                 EtaWindow           : float=flags.EtaWindow,
@@ -35,12 +38,15 @@ class RootStreamESDMaker( Cpp ):
     - InputTruthKey: Key for the TruthParticle container.
     - InputCellsKey: Key for the CaloCell container.
     - InputSeedsKey: Key for the Seed container.
+    - InputXTCellsKey: Key for the Crosstalk Contaminated CaloCell container.
     - InputCellsTruthKey: Key for the CaloCellTruth container.
     - OutputEventKey: Key for the EventInfo container.
     - OutputTruthKey: Key for the TruthParticle container.
     - OutputCellsKey: Key for the CaloCell container.
     - OutputSeedsKey: Key for the Seed container.
+    - OutputXTCellsKey: Key for the Crosstalk Contaminated CaloCell container.
     - OutputCellsTruthKey: Key for the CaloCellTruth container.
+    - DumpCrossTalkCells: Parameter to define if crosstalk cells will be recorded.
     - OutputLevel: Level of the output messages.
     - NtupleName: Name of the TTree.
     - EtaWindow: Eta window for the RoI.
@@ -52,12 +58,15 @@ class RootStreamESDMaker( Cpp ):
     self.setProperty( "InputTruthKey"       , InputTruthKey                                                       )
     self.setProperty( "InputCellsKey"       , InputCellsKey                                                       )
     self.setProperty( "InputSeedsKey"       , InputSeedsKey                                                       )
+    self.setProperty( "InputXTCellsKey"     , InputXTCellsKey                                                     )
     self.setProperty( "InputCellsTruthKey"  , InputCellsTruthKey                                                  )
     self.setProperty( "OutputEventKey"      , OutputEventKey if OutputEventKey else InputEventKey                 )
     self.setProperty( "OutputTruthKey"      , OutputTruthKey if OutputTruthKey else InputTruthKey                 )
     self.setProperty( "OutputCellsKey"      , OutputCellsKey if OutputCellsKey else InputCellsKey                 )
     self.setProperty( "OutputSeedsKey"      , OutputSeedsKey if OutputSeedsKey else InputSeedsKey                 )
+    self.setProperty( "OutputXTCellsKey"    , OutputXTCellsKey if OutputXTCellsKey else InputXTCellsKey           )
     self.setProperty( "OutputCellsTruthKey" , OutputCellsTruthKey if OutputCellsTruthKey else InputCellsTruthKey  )
+    self.setProperty( "DumpCrossTalkCells"  , DumpCrossTalkCells                                                  )
     self.setProperty( "OutputLevel"         , OutputLevel                                                         ) 
     self.setProperty( "NtupleName"          , NtupleName                                                          )
     self.setProperty( "EtaWindow"           , EtaWindow                                                           )

@@ -5,7 +5,7 @@ import os
 
 from pathlib            import Path
 from typing             import List
-from CaloCellBuilder    import CaloCellBuilder
+from CaloCellBuilder    import CaloCellBuilder, CaloFlags
 from GaugiKernel        import LoggingLevel, get_argparser_formatter
 from GaugiKernel        import ComponentAccumulator
 from RootStreamBuilder  import RootStreamHITReader, recordable
@@ -116,6 +116,7 @@ def main(events : List[int],
                                   InputHitsKey=recordable("Hits"),
                                   OutputCellsKey=recordable("Cells"),
                                   OutputTruthCellsKey=recordable("TruthCells"),
+                                  OutputXTCellsKey=recordable("XTCells"),
                                   InputEventKey=recordable("Events"),
     )
     calorimeter.merge(acc)
@@ -126,15 +127,14 @@ def main(events : List[int],
                              InputEventKey=recordable("Events"),
                              InputTruthKey=recordable("Particles"),
                              InputSeedsKey=recordable("Seeds"),
+                             InputXTCellsKey=recordable("XTCells"),
+                             DumpCrossTalkCells=CaloFlags.DoCrossTalk,
                              OutputLevel=outputLevel)
     acc += ESD
     
     exec(pre_exec)
     acc.run(events)
     exec(post_exec)
-
-
-    
 
 
 if __name__ == "__main__":

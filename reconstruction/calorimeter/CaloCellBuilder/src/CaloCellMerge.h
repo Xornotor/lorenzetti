@@ -44,11 +44,14 @@ class CaloCellMerge : public Gaugi::Algorithm
     
     /*! collection key */
     std::vector<std::string> m_collectionKeys;
+    std::vector<std::string> m_xtCollectionKeys;
     /*! CaloCellContainer key for reco cells */
     std::string m_cellsKey;
-    // std::string m_xtcellsKey;
+    std::string m_xtcellsKey;
     /*! CaloCellContainer key for truth cells */
     std::string m_truthCellsKey;
+    /*! Flag to dump Crosstalk contaminated cells*/
+    bool m_dumpXTCells;
 };
 
 

@@ -35,8 +35,11 @@ CaloCellMerge::CaloCellMerge( std::string name ) :
   Algorithm()
 {
   declareProperty( "InputCollectionKeys"    , m_collectionKeys={}           );
+  declareProperty( "InputXTCollectionKeys"  , m_xtCollectionKeys={}         );
   declareProperty( "OutputCellsKey"         , m_cellsKey="Cells"            );
+  declareProperty( "OutputXTCellsKey"       , m_xtcellsKey="XTCells"        );
   declareProperty( "OutputTruthCellsKey"    , m_truthCellsKey="TruthCells"  );
+  declareProperty( "DumpCrossTalkCells"     , m_dumpXTCells=false           );  
   declareProperty( "OutputLevel"            , m_outputLevel=1               );
 }
 
@@ -111,13 +114,13 @@ StatusCode CaloCellMerge::post_execute( EventContext &ctx ) const
   SG::WriteHandle<xAOD::CaloCellContainer> truthContainer( m_truthCellsKey , ctx );
   truthContainer.record( std::unique_ptr<xAOD::CaloCellContainer>(new xAOD::CaloCellContainer()) );
 
-
   //unsigned long int hash = 0;
 
   for ( auto key : m_collectionKeys ){
 
     MSG_DEBUG( "Reading all cells from collection with key " << key );
     SG::ReadHandle<xAOD::CaloDetDescriptorCollection> collection( key, ctx );
+    MSG_DEBUG("Collection.size: "<< collection->operator*().size());
     
     if( !collection.isValid() ){
       MSG_WARNING( "It's not possible to read the xAOD::CaloCellCollection from this Context using this key: " << key );
@@ -156,9 +159,45 @@ StatusCode CaloCellMerge::post_execute( EventContext &ctx ) const
 
       cell->setDescriptor( descriptor );
       recoContainer->push_back( cell );
-
     }// Loop over all descriptorCells
   }// Loop over all collections
+
+
+  if(m_dumpXTCells){
+    MSG_DEBUG( "Creating crosstalk-contaminated reco cells containers with key " << m_xtcellsKey );
+    SG::WriteHandle<xAOD::CaloCellContainer> xtRecoContainer( m_xtcellsKey, ctx );
+    xtRecoContainer.record( std::unique_ptr<xAOD::CaloCellContainer>(new xAOD::CaloCellContainer()) );
+
+    for ( auto key : m_xtCollectionKeys ){
+      MSG_DEBUG( "Reading all cells from collection with key " << key );
+      SG::ReadHandle<xAOD::CaloDetDescriptorCollection> collection( key, ctx );
+      MSG_DEBUG( "xtCollection.size: "<< collection->operator*().size() );
+
+      if( !collection.isValid() ){
+        MSG_WARNING( "It's not possible to read the xAOD::CaloCellCollection from this Context using this key: " << key );
+        continue;
+      }
+
+      MSG_DEBUG( "Creating new cells and attach the object into the container" ); 
+      for (const auto &pair : **collection.ptr() )
+      {
+        // descriptor Cell with all geant/bunch/pulse information
+        const xAOD::CaloDetDescriptor* descriptor=pair.second;
+        // Create the Reco cell
+        auto cell = new xAOD::CaloCell();
+        cell->setEta( descriptor->eta() );
+        cell->setPhi( descriptor->phi() );
+        cell->setDeltaEta( descriptor->deltaEta() );
+        cell->setDeltaPhi( descriptor->deltaPhi() );
+        cell->setE( descriptor->e() ); // Estimated energy from OF
+        cell->setEt( cell->e() / std::cosh( cell->eta() ) );
+        cell->setTau( descriptor->tau());
+
+        cell->setDescriptor( descriptor );
+        xtRecoContainer->push_back( cell );
+      }// Loop over all descriptorCells
+    }// Loop over all collections
+  }
 
   MSG_DEBUG( "All collections were merged into two CaloCellContainer" );
   return StatusCode::SUCCESS;
