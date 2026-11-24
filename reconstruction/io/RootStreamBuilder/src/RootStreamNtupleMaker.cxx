@@ -54,6 +54,11 @@ RootStreamNtupleMaker::RootStreamNtupleMaker(std::string name) : IMsgService(nam
   declareProperty("InputTruthRingerKeys", m_truthRingerKeys = {"TruthRings"});
   declareProperty("InputTruthElectronKey", m_truthElectronKey = "TruthElectrons");
   declareProperty("InputElectronKey", m_electronKey = "Electrons");
+  declareProperty("InputXTClusterKey", m_xtClusterKey = "XTClusters"); // recebe os clusters XT
+  declareProperty("InputXTRingerKeys", m_xtRingerKeys = {"XTRings"}); // recebe as topologias XT
+  declareProperty("InputXTRingerL0Key", m_xtRingerL0Key = "XTRingsL0"); // recebe os aneis L0 XT
+  declareProperty("InputXTElectronKey", m_xtElectronKey = "XTElectrons"); // recebe os eletrons XT
+  declareProperty("DumpCrossTalkCells", m_doCrosstalk = false); // habilita as colunas XT
   declareProperty("OutputLevel", m_outputLevel = 0);
   declareProperty("OutputNtupleName", m_outputNtupleName = "events");
 }
@@ -195,6 +200,52 @@ StatusCode RootStreamNtupleMaker::bookHistograms(EventContext &ctx) const
   std::vector<float> *mc_et = nullptr;
   std::vector<std::vector<float> *> ring_holders(m_ringerKeys.size(), nullptr);
   std::vector<std::vector<float> *> truth_ring_holders(m_truthRingerKeys.size(), nullptr);
+  bool xt_found = false; // indica se a linha normal tem um cluster XT correspondente
+  float xt_cl_eta = 0;
+  float xt_cl_phi = 0;
+  float xt_cl_e = 0;
+  float xt_cl_et = 0;
+  float xt_cl_deta = 0;
+  float xt_cl_dphi = 0;
+  float xt_cl_e0 = 0;
+  float xt_cl_e1 = 0;
+  float xt_cl_e2 = 0;
+  float xt_cl_e3 = 0;
+  float xt_cl_ehad1 = 0;
+  float xt_cl_ehad2 = 0;
+  float xt_cl_ehad3 = 0;
+  float xt_cl_etot = 0;
+  float xt_cl_e233 = 0;
+  float xt_cl_e237 = 0;
+  float xt_cl_e277 = 0;
+  float xt_cl_emaxs1 = 0;
+  float xt_cl_emaxs2 = 0;
+  float xt_cl_e2tsts1 = 0;
+  float xt_cl_reta = 0;
+  float xt_cl_rphi = 0;
+  float xt_cl_rhad = 0;
+  float xt_cl_rhad1 = 0;
+  float xt_cl_eratio = 0;
+  float xt_cl_f0 = 0;
+  float xt_cl_f1 = 0;
+  float xt_cl_f2 = 0;
+  float xt_cl_f3 = 0;
+  float xt_cl_weta2 = 0;
+  float xt_cl_secondR = 0;
+  float xt_cl_lambdaCenter = 0;
+  float xt_cl_secondLambda = 0;
+  float xt_cl_fracMax = 0;
+  float xt_cl_lateralMom = 0;
+  float xt_cl_longitudinalMom = 0;
+  float xt_el_eta = -1;
+  float xt_el_phi = -1;
+  float xt_el_et = -1;
+  bool xt_el_tight = false;
+  bool xt_el_medium = false;
+  bool xt_el_loose = false;
+  bool xt_el_vloose = false;
+  std::vector<float> *xt_cl_ringsL0 = nullptr; // guarda os aneis L0 do cluster XT
+  std::vector<std::vector<float> *> xt_ring_holders(m_xtRingerKeys.size(), nullptr); // guarda as topologias XT
 
   TTree *tree = new TTree(m_outputNtupleName.c_str(), "");
 
@@ -249,6 +300,56 @@ StatusCode RootStreamNtupleMaker::bookHistograms(EventContext &ctx) const
   tree->Branch("el_loose", &el_loose);
   tree->Branch("el_vloose", &el_vloose);
 
+  if (m_doCrosstalk) // cria as colunas XT apenas para ntuples com crosstalk
+  {
+    tree->Branch("xt_found", &xt_found);
+    tree->Branch("xt_cl_eta", &xt_cl_eta);
+    tree->Branch("xt_cl_phi", &xt_cl_phi);
+    tree->Branch("xt_cl_e", &xt_cl_e);
+    tree->Branch("xt_cl_et", &xt_cl_et);
+    tree->Branch("xt_cl_deta", &xt_cl_deta);
+    tree->Branch("xt_cl_dphi", &xt_cl_dphi);
+    tree->Branch("xt_cl_e0", &xt_cl_e0);
+    tree->Branch("xt_cl_e1", &xt_cl_e1);
+    tree->Branch("xt_cl_e2", &xt_cl_e2);
+    tree->Branch("xt_cl_e3", &xt_cl_e3);
+    tree->Branch("xt_cl_ehad1", &xt_cl_ehad1);
+    tree->Branch("xt_cl_ehad2", &xt_cl_ehad2);
+    tree->Branch("xt_cl_ehad3", &xt_cl_ehad3);
+    tree->Branch("xt_cl_etot", &xt_cl_etot);
+    tree->Branch("xt_cl_e233", &xt_cl_e233);
+    tree->Branch("xt_cl_e237", &xt_cl_e237);
+    tree->Branch("xt_cl_e277", &xt_cl_e277);
+    tree->Branch("xt_cl_emaxs1", &xt_cl_emaxs1);
+    tree->Branch("xt_cl_emaxs2", &xt_cl_emaxs2);
+    tree->Branch("xt_cl_e2tsts1", &xt_cl_e2tsts1);
+    tree->Branch("xt_cl_reta", &xt_cl_reta);
+    tree->Branch("xt_cl_rphi", &xt_cl_rphi);
+    tree->Branch("xt_cl_rhad", &xt_cl_rhad);
+    tree->Branch("xt_cl_rhad1", &xt_cl_rhad1);
+    tree->Branch("xt_cl_eratio", &xt_cl_eratio);
+    tree->Branch("xt_cl_f0", &xt_cl_f0);
+    tree->Branch("xt_cl_f1", &xt_cl_f1);
+    tree->Branch("xt_cl_f2", &xt_cl_f2);
+    tree->Branch("xt_cl_f3", &xt_cl_f3);
+    tree->Branch("xt_cl_weta2", &xt_cl_weta2);
+    tree->Branch("xt_cl_secondR", &xt_cl_secondR);
+    tree->Branch("xt_cl_lambdaCenter", &xt_cl_lambdaCenter);
+    tree->Branch("xt_cl_secondLambda", &xt_cl_secondLambda);
+    tree->Branch("xt_cl_fracMax", &xt_cl_fracMax);
+    tree->Branch("xt_cl_lateralMom", &xt_cl_lateralMom);
+    tree->Branch("xt_cl_longitudinalMom", &xt_cl_longitudinalMom);
+    tree->Branch("xt_el_eta", &xt_el_eta);
+    tree->Branch("xt_el_phi", &xt_el_phi);
+    tree->Branch("xt_el_et", &xt_el_et);
+    tree->Branch("xt_el_tight", &xt_el_tight);
+    tree->Branch("xt_el_medium", &xt_el_medium);
+    tree->Branch("xt_el_loose", &xt_el_loose);
+    tree->Branch("xt_el_vloose", &xt_el_vloose);
+    tree->Branch("xt_cl_ringsL0", &xt_cl_ringsL0);
+    for (size_t i = 0; i < m_xtRingerKeys.size(); ++i)
+      tree->Branch(("xt_cl_rings_" + m_xtRingerKeys[i]).c_str(), &xt_ring_holders[i]);
+  }
   tree->Branch("truth_cl_eta", &truth_cl_eta);
   tree->Branch("truth_cl_phi", &truth_cl_phi);
   tree->Branch("truth_cl_e", &truth_cl_e);
@@ -392,6 +493,20 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
   SG::ReadHandle<xAOD::CaloClusterContainer> truth_cluster_container(m_truthClusterKey, ctx);
   // SG::ReadHandle<xAOD::CaloRingsContainer> truth_ringer_container(m_truthRingerKey, ctx);
   SG::ReadHandle<xAOD::ElectronContainer> truth_electron_container(m_truthElectronKey, ctx);
+  SG::ReadHandle<xAOD::CaloClusterContainer> xt_cluster_container(m_xtClusterKey, ctx); // recebe os clusters XT
+  SG::ReadHandle<xAOD::ElectronContainer> xt_electron_container(m_xtElectronKey, ctx); // recebe os eletrons XT
+  SG::ReadHandle<xAOD::CaloRingsContainer> xt_ringerL0_container(m_xtRingerL0Key, ctx); // recebe os aneis L0 XT
+  if (m_doCrosstalk && (!xt_cluster_container.isValid() || !xt_electron_container.isValid() || !xt_ringerL0_container.isValid()))
+  {
+    MSG_ERROR("Missing XT clusters, electrons or L0 rings in the AOD");
+    return StatusCode::FAILURE;
+  }
+  std::vector<SG::ReadHandle<xAOD::CaloRingsContainer>> xt_ringer_containers;
+  if (m_doCrosstalk)
+  {
+    for (const auto &key : m_xtRingerKeys)
+      xt_ringer_containers.emplace_back(key, ctx);
+  }
 
   auto store = ctx.getStoreGateSvc();
   store->cd();
@@ -499,6 +614,56 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
   bool truth_el_medium = false;
   bool truth_el_loose = false;
   bool truth_el_vloose = false;
+  bool xt_found = false; // indica se o cluster XT correspondente foi encontrado
+  float xt_cl_eta = 0;
+  float xt_cl_phi = 0;
+  float xt_cl_e = 0;
+  float xt_cl_et = 0;
+  float xt_cl_deta = 0;
+  float xt_cl_dphi = 0;
+  float xt_cl_e0 = 0;
+  float xt_cl_e1 = 0;
+  float xt_cl_e2 = 0;
+  float xt_cl_e3 = 0;
+  float xt_cl_ehad1 = 0;
+  float xt_cl_ehad2 = 0;
+  float xt_cl_ehad3 = 0;
+  float xt_cl_etot = 0;
+  float xt_cl_e233 = 0;
+  float xt_cl_e237 = 0;
+  float xt_cl_e277 = 0;
+  float xt_cl_emaxs1 = 0;
+  float xt_cl_emaxs2 = 0;
+  float xt_cl_e2tsts1 = 0;
+  float xt_cl_reta = 0;
+  float xt_cl_rphi = 0;
+  float xt_cl_rhad = 0;
+  float xt_cl_rhad1 = 0;
+  float xt_cl_eratio = 0;
+  float xt_cl_f0 = 0;
+  float xt_cl_f1 = 0;
+  float xt_cl_f2 = 0;
+  float xt_cl_f3 = 0;
+  float xt_cl_weta2 = 0;
+  float xt_cl_secondR = 0;
+  float xt_cl_lambdaCenter = 0;
+  float xt_cl_secondLambda = 0;
+  float xt_cl_fracMax = 0;
+  float xt_cl_lateralMom = 0;
+  float xt_cl_longitudinalMom = 0;
+  float xt_el_eta = -1;
+  float xt_el_phi = -1;
+  float xt_el_et = -1;
+  bool xt_el_tight = false;
+  bool xt_el_medium = false;
+  bool xt_el_loose = false;
+  bool xt_el_vloose = false;
+  std::vector<float> xt_cl_ringsL0_storage;
+  std::vector<float> *xt_cl_ringsL0 = &xt_cl_ringsL0_storage;
+  std::vector<std::vector<float>> xt_ring_storage(m_xtRingerKeys.size());
+  std::vector<std::vector<float> *> xt_cl_ring_vecs(m_xtRingerKeys.size(), nullptr);
+  for (size_t i = 0; i < m_xtRingerKeys.size(); ++i)
+    xt_cl_ring_vecs[i] = &xt_ring_storage[i];
 
   InitBranch(tree, "avgmu", &avgmu);
   InitBranch(tree, "EventNumber", &eventNumber);
@@ -604,6 +769,57 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
   InitBranch(tree, "truth_el_medium", &truth_el_medium);
   InitBranch(tree, "truth_el_loose", &truth_el_loose);
   InitBranch(tree, "truth_el_vloose", &truth_el_vloose);
+
+  if (m_doCrosstalk) // liga os ramos XT do ntuple as variaveis do evento
+  {
+    InitBranch(tree, "xt_found", &xt_found);
+    InitBranch(tree, "xt_cl_eta", &xt_cl_eta);
+    InitBranch(tree, "xt_cl_phi", &xt_cl_phi);
+    InitBranch(tree, "xt_cl_e", &xt_cl_e);
+    InitBranch(tree, "xt_cl_et", &xt_cl_et);
+    InitBranch(tree, "xt_cl_deta", &xt_cl_deta);
+    InitBranch(tree, "xt_cl_dphi", &xt_cl_dphi);
+    InitBranch(tree, "xt_cl_e0", &xt_cl_e0);
+    InitBranch(tree, "xt_cl_e1", &xt_cl_e1);
+    InitBranch(tree, "xt_cl_e2", &xt_cl_e2);
+    InitBranch(tree, "xt_cl_e3", &xt_cl_e3);
+    InitBranch(tree, "xt_cl_ehad1", &xt_cl_ehad1);
+    InitBranch(tree, "xt_cl_ehad2", &xt_cl_ehad2);
+    InitBranch(tree, "xt_cl_ehad3", &xt_cl_ehad3);
+    InitBranch(tree, "xt_cl_etot", &xt_cl_etot);
+    InitBranch(tree, "xt_cl_e233", &xt_cl_e233);
+    InitBranch(tree, "xt_cl_e237", &xt_cl_e237);
+    InitBranch(tree, "xt_cl_e277", &xt_cl_e277);
+    InitBranch(tree, "xt_cl_emaxs1", &xt_cl_emaxs1);
+    InitBranch(tree, "xt_cl_emaxs2", &xt_cl_emaxs2);
+    InitBranch(tree, "xt_cl_e2tsts1", &xt_cl_e2tsts1);
+    InitBranch(tree, "xt_cl_reta", &xt_cl_reta);
+    InitBranch(tree, "xt_cl_rphi", &xt_cl_rphi);
+    InitBranch(tree, "xt_cl_rhad", &xt_cl_rhad);
+    InitBranch(tree, "xt_cl_rhad1", &xt_cl_rhad1);
+    InitBranch(tree, "xt_cl_eratio", &xt_cl_eratio);
+    InitBranch(tree, "xt_cl_f0", &xt_cl_f0);
+    InitBranch(tree, "xt_cl_f1", &xt_cl_f1);
+    InitBranch(tree, "xt_cl_f2", &xt_cl_f2);
+    InitBranch(tree, "xt_cl_f3", &xt_cl_f3);
+    InitBranch(tree, "xt_cl_weta2", &xt_cl_weta2);
+    InitBranch(tree, "xt_cl_secondR", &xt_cl_secondR);
+    InitBranch(tree, "xt_cl_lambdaCenter", &xt_cl_lambdaCenter);
+    InitBranch(tree, "xt_cl_secondLambda", &xt_cl_secondLambda);
+    InitBranch(tree, "xt_cl_fracMax", &xt_cl_fracMax);
+    InitBranch(tree, "xt_cl_lateralMom", &xt_cl_lateralMom);
+    InitBranch(tree, "xt_cl_longitudinalMom", &xt_cl_longitudinalMom);
+    InitBranch(tree, "xt_el_eta", &xt_el_eta);
+    InitBranch(tree, "xt_el_phi", &xt_el_phi);
+    InitBranch(tree, "xt_el_et", &xt_el_et);
+    InitBranch(tree, "xt_el_tight", &xt_el_tight);
+    InitBranch(tree, "xt_el_medium", &xt_el_medium);
+    InitBranch(tree, "xt_el_loose", &xt_el_loose);
+    InitBranch(tree, "xt_el_vloose", &xt_el_vloose);
+    InitBranch(tree, "xt_cl_ringsL0", &xt_cl_ringsL0);
+    for (size_t i = 0; i < m_xtRingerKeys.size(); ++i)
+      InitBranch(tree, ("xt_cl_rings_" + m_xtRingerKeys[i]).c_str(), &xt_cl_ring_vecs[i]);
+  }
 
   auto evt = (**event_container.ptr()).front();
 
@@ -891,6 +1107,144 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
         mc_phi->push_back(mc->phi());
         mc_e->push_back(mc->e());
         mc_et->push_back(mc->et());
+      }
+    }
+
+    if (m_doCrosstalk) // preenche o caminho XT correspondente a Seed da linha normal
+    {
+      xt_found = false;
+      xt_cl_eta = 0;
+      xt_cl_phi = 0;
+      xt_cl_e = 0;
+      xt_cl_et = 0;
+      xt_cl_deta = 0;
+      xt_cl_dphi = 0;
+      xt_cl_e0 = 0;
+      xt_cl_e1 = 0;
+      xt_cl_e2 = 0;
+      xt_cl_e3 = 0;
+      xt_cl_ehad1 = 0;
+      xt_cl_ehad2 = 0;
+      xt_cl_ehad3 = 0;
+      xt_cl_etot = 0;
+      xt_cl_e233 = 0;
+      xt_cl_e237 = 0;
+      xt_cl_e277 = 0;
+      xt_cl_emaxs1 = 0;
+      xt_cl_emaxs2 = 0;
+      xt_cl_e2tsts1 = 0;
+      xt_cl_reta = 0;
+      xt_cl_rphi = 0;
+      xt_cl_rhad = 0;
+      xt_cl_rhad1 = 0;
+      xt_cl_eratio = 0;
+      xt_cl_f0 = 0;
+      xt_cl_f1 = 0;
+      xt_cl_f2 = 0;
+      xt_cl_f3 = 0;
+      xt_cl_weta2 = 0;
+      xt_cl_secondR = 0;
+      xt_cl_lambdaCenter = 0;
+      xt_cl_secondLambda = 0;
+      xt_cl_fracMax = 0;
+      xt_cl_lateralMom = 0;
+      xt_cl_longitudinalMom = 0;
+      xt_el_eta = -1;
+      xt_el_phi = -1;
+      xt_el_et = -1;
+      xt_el_tight = false;
+      xt_el_medium = false;
+      xt_el_loose = false;
+      xt_el_vloose = false;
+      xt_cl_ringsL0->clear();
+      for (auto rings : xt_cl_ring_vecs)
+        rings->clear();
+
+      const xAOD::CaloCluster *xt_clus = nullptr;
+      for (auto candidate : **xt_cluster_container.ptr())
+      {
+        if (candidate->seed() && candidate->seed()->id() == clus->seed()->id())
+        {
+          xt_clus = candidate;
+          break;
+        }
+      }
+      if (xt_clus)
+      {
+        xt_found = true;
+        xt_cl_eta = xt_clus->eta();
+        xt_cl_phi = xt_clus->phi();
+        xt_cl_e = xt_clus->e();
+        xt_cl_et = xt_clus->et();
+        xt_cl_deta = xt_clus->deltaEta();
+        xt_cl_dphi = xt_clus->deltaPhi();
+        xt_cl_e0 = xt_clus->e0();
+        xt_cl_e1 = xt_clus->e1();
+        xt_cl_e2 = xt_clus->e2();
+        xt_cl_e3 = xt_clus->e3();
+        xt_cl_ehad1 = xt_clus->ehad1();
+        xt_cl_ehad2 = xt_clus->ehad2();
+        xt_cl_ehad3 = xt_clus->ehad3();
+        xt_cl_etot = xt_clus->etot();
+        xt_cl_e233 = xt_clus->e233();
+        xt_cl_e237 = xt_clus->e237();
+        xt_cl_e277 = xt_clus->e277();
+        xt_cl_emaxs1 = xt_clus->emaxs1();
+        xt_cl_emaxs2 = xt_clus->emaxs2();
+        xt_cl_e2tsts1 = xt_clus->e2tsts1();
+        xt_cl_reta = xt_clus->reta();
+        xt_cl_rphi = xt_clus->rphi();
+        xt_cl_rhad = xt_clus->rhad();
+        xt_cl_rhad1 = xt_clus->rhad1();
+        xt_cl_eratio = xt_clus->eratio();
+        xt_cl_f0 = xt_clus->f0();
+        xt_cl_f1 = xt_clus->f1();
+        xt_cl_f2 = xt_clus->f2();
+        xt_cl_f3 = xt_clus->f3();
+        xt_cl_weta2 = xt_clus->weta2();
+        xt_cl_secondR = xt_clus->secondR();
+        xt_cl_lambdaCenter = xt_clus->lambdaCenter();
+        xt_cl_secondLambda = xt_clus->secondLambda();
+        xt_cl_fracMax = xt_clus->fracMax();
+        xt_cl_lateralMom = xt_clus->lateralMom();
+        xt_cl_longitudinalMom = xt_clus->longitudinalMom();
+        for (auto candidate : **xt_electron_container.ptr())
+        {
+          if (candidate->caloCluster() == xt_clus)
+          {
+            xt_el_eta = candidate->eta();
+            xt_el_phi = candidate->phi();
+            xt_el_et = candidate->et();
+            xt_el_tight = candidate->isTight();
+            xt_el_medium = candidate->isMedium();
+            xt_el_loose = candidate->isLoose();
+            xt_el_vloose = candidate->isVeryLoose();
+            break;
+          }
+        }
+        for (auto ring : **xt_ringerL0_container.ptr())
+        {
+          if (ring->caloCluster() == xt_clus)
+          {
+            for (auto value : ring->rings())
+              xt_cl_ringsL0->push_back(value);
+            break;
+          }
+        }
+        for (size_t i = 0; i < m_xtRingerKeys.size(); ++i)
+        {
+          if (!xt_ringer_containers[i].isValid())
+            continue;
+          for (auto ring : **xt_ringer_containers[i].ptr())
+          {
+            if (ring->caloCluster() == xt_clus)
+            {
+              for (auto value : ring->rings())
+                xt_cl_ring_vecs[i]->push_back(value);
+              break;
+            }
+          }
+        }
       }
     }
 

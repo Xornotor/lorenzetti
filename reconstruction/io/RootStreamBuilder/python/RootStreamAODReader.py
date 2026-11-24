@@ -21,6 +21,12 @@ class RootStreamAODReader(Cpp):
         OutputTruthClusterKey: str,
         OutputTruthRingerKeys: list,  # Alterado para aceitar uma lista de strings
         OutputTruthElectronKey: str,
+        OutputXTCellsKey: str,  # acrescentei para entregar as XTCells lidas do AOD
+        OutputXTClusterKey: str,  # acrescentei para entregar os XTClusters
+        OutputXTRingerKeys: list,  # acrescentei a lista dos aneis XT
+        OutputXTRingerL0Key: str,  # acrescentei para entregar os XTRingsL0
+        OutputXTElectronKey: str,  # acrescentei para entregar os XTElectrons
+        DumpCrossTalkCells: bool = False,  # indica se este AOD deve conter os dados XT
         OutputLevel: int = 0,
         NtupleName: str = "CollectionTree",
     ):
@@ -36,6 +42,12 @@ class RootStreamAODReader(Cpp):
         self.setProperty("OutputElectronKey", OutputElectronKey)
         self.setProperty("OutputTruthClusterKey", OutputTruthClusterKey)
         self.setProperty("OutputTruthElectronKey", OutputTruthElectronKey)
+        self.setProperty("OutputXTCellsKey", OutputXTCellsKey)  # passei a chave das XTCells ao C++
+        self.setProperty("OutputXTClusterKey", OutputXTClusterKey)  # passei a chave dos XTClusters ao C++
+        self.setProperty("OutputXTRingerKeys", OutputXTRingerKeys)  # passei as chaves dos aneis XT ao C++
+        self.setProperty("OutputXTRingerL0Key", OutputXTRingerL0Key)  # passei a chave dos XTRingsL0 ao C++
+        self.setProperty("OutputXTElectronKey", OutputXTElectronKey)  # passei a chave dos XTElectrons ao C++
+        self.setProperty("DumpCrossTalkCells", DumpCrossTalkCells)  # passa ao C++ a decisao de ler os ramos XT
 
         # Novas propriedades de listas (Múltiplas coleções)
         self.setProperty("OutputRingerKeys", OutputRingerKeys)
