@@ -23,6 +23,12 @@ class RootStreamAODMaker(Cpp):
         InputTruthClusterKey: str,
         InputTruthRingerKeys: list,
         InputTruthElectronKey: str,
+        InputXTCellsKey: str = "XTCells",
+        InputXTClusterKey: str = "XTClusters",
+        InputXTRingerKeys: list = None,
+        InputXTRingerL0Key: str = "XTRingsL0",
+        InputXTElectronKey: str = "XTElectrons",
+        InputTruthRingerL0Key: str = "TruthRingsL0",
         OutputEventKey: str = None,
         OutputTruthKey: str = None,
         OutputCellsKey: str = None,
@@ -35,9 +41,15 @@ class RootStreamAODMaker(Cpp):
         OutputTruthClusterKey: str = None,
         OutputTruthRingerKeys: list = None,
         OutputTruthElectronKey: str = None,
+        OutputXTCellsKey: str = None,
+        OutputXTClusterKey: str = None,
+        OutputXTRingerKeys: list = None,
+        OutputXTRingerL0Key: str = None,
+        OutputXTElectronKey: str = None,
         OutputLevel: int = 0,
         NtupleName: str = "CollectionTree",
         DumpCells: bool = flags.DumpCells,
+        DumpCrossTalkCells: bool = False,
     ):
 
         Cpp.__init__(self, ROOT.RootStreamAODMaker(name))
@@ -51,6 +63,12 @@ class RootStreamAODMaker(Cpp):
         self.setProperty("InputTruthCellsKey", InputTruthCellsKey)
         self.setProperty("InputTruthClusterKey", InputTruthClusterKey)
         self.setProperty("InputTruthRingerKeys", InputTruthRingerKeys)
+        self.setProperty("InputXTCellsKey", InputXTCellsKey)
+        self.setProperty("InputXTClusterKey", InputXTClusterKey)
+        self.setProperty("InputXTRingerKeys", InputXTRingerKeys or [])
+        self.setProperty("InputXTRingerL0Key", InputXTRingerL0Key)
+        self.setProperty("InputXTElectronKey", InputXTElectronKey)
+        self.setProperty("InputTruthRingerL0Key", InputTruthRingerL0Key)
         self.setProperty(
             "OutputEventKey", OutputEventKey if OutputEventKey else InputEventKey
         )
@@ -94,3 +112,10 @@ class RootStreamAODMaker(Cpp):
         self.setProperty("OutputLevel", OutputLevel)
         self.setProperty("NtupleName", NtupleName)
         self.setProperty("DumpCells", DumpCells)
+        self.setProperty("OutputXTCellsKey", OutputXTCellsKey or InputXTCellsKey)
+        self.setProperty("OutputXTClusterKey", OutputXTClusterKey or InputXTClusterKey)
+        self.setProperty("OutputXTRingerKeys", OutputXTRingerKeys or InputXTRingerKeys or [])
+        self.setProperty("OutputXTRingerL0Key", OutputXTRingerL0Key or InputXTRingerL0Key)
+        self.setProperty("OutputXTElectronKey", OutputXTElectronKey or InputXTElectronKey)
+        self.setProperty("DumpCrossTalkCells", DumpCrossTalkCells)
+        self.setProperty("OutputTruthRingerL0Key", InputTruthRingerL0Key)

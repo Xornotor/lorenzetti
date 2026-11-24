@@ -58,13 +58,22 @@ private:
   std::string m_truthClusterKey;
   std::string m_truthRingerKey;
   std::string m_truthElectronKey;
+  std::string m_xtCellsKey;
+  std::string m_xtClusterKey;
+  std::string m_xtRingerL0Key;
+  std::string m_xtElectronKey;
   std::string m_ntupleName;
   std::string m_inputFile;
 
   std::vector<std::string> m_ringerKeys;
   std::vector<std::string> m_truthRingerKeys;
+  std::vector<std::string> m_xtRingerKeys;
 
+
+  bool m_doCrosstalk;
   int m_outputLevel;
+
+
 };
 
 #endif

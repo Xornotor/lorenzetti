@@ -17,6 +17,11 @@ from RootStreamBuilder.RootStreamFlags import RootStreamAODFlags as flags
 
 from reco.reco_job import merge_args, update_args, create_parallel_job
 
+
+from CaloCellBuilder import CaloFlags
+
+
+
 """
 Script: reco_trf.py
 Purpose: Executes the offline reconstruction chain.
@@ -97,13 +102,14 @@ def main(
     if isinstance(input_file, Path):
         input_file = str(input_file)
     if isinstance(output_file, Path):
-        output_file = str(object=output_file)
+        output_file = str(output_file)
 
     outputLevel = LoggingLevel.toC(logging_level)
 
     exec(command)
 
     acc = ComponentAccumulator("ComponentAccumulator", output_file)
+
 
     ESD = RootStreamESDReader(
         "ESDReader",
@@ -114,6 +120,8 @@ def main(
         OutputTruthKey=recordable("Particles"),
         OutputSeedsKey=recordable("Seeds"),
         OutputLevel=outputLevel,
+        OutputXTCellsKey=recordable("XTCells"),
+        DumpCrossTalkCells=CaloFlags.DoCrossTalk,
     )
     ESD.merge(acc)
 
@@ -138,6 +146,22 @@ def main(
         HistogramPath="Expert/TruthClusters",
         OutputLevel=outputLevel,
     )
+
+
+    if CaloFlags.DoCrossTalk:
+        cluster_xt = CaloClusterMaker(
+            "CaloClusterMaker_XT",
+            InputCellsKey=recordable("XTCells"),
+            InputSeedsKey=recordable("Seeds"),
+            OutputClusterKey=recordable("XTClusters"),
+            HistogramPath="Expert/XTClusters",
+            OutputLevel=outputLevel,
+        )
+
+        
+
+
+
     ringsL0 = CaloRingsBuilderCfg(
         "CaloRingsBuilderL0",
         InputClusterKey=recordable("Clusters"),
@@ -147,6 +171,30 @@ def main(
         DoSigmaCut=True,
         SigmaCut=flags.SigmaCut,
     )
+
+
+
+    ringsL0_truth = CaloRingsBuilderCfg(
+        "CaloRingsBuilderL0_Truth",
+        InputClusterKey=recordable("TruthClusters"),
+        OutputRingerKey=recordable("TruthRingsL0"),
+        HistogramPath="Expert/TruthRingsL0",
+        OutputLevel=outputLevel,
+        DoSigmaCut=True,
+        SigmaCut=flags.SigmaCut,
+    )
+
+    if CaloFlags.DoCrossTalk:
+        ringsL0_xt = CaloRingsBuilderCfg(
+            "CaloRingsBuilderL0_XT",
+            InputClusterKey=recordable("XTClusters"),
+            OutputRingerKey=recordable("XTRingsL0"),
+            HistogramPath="Expert/XTRingsL0",
+            OutputLevel=outputLevel,
+            DoSigmaCut=True,
+            SigmaCut=flags.SigmaCut,
+        )
+
 
     hypo = ElectronBuilderCfg(
         "ElectronBuilder",
@@ -162,10 +210,22 @@ def main(
         OutputLevel=outputLevel,
     )
 
+    if CaloFlags.DoCrossTalk:
+        hypo_xt = ElectronBuilderCfg(
+            "ElectronBuilder_XT",
+            InputClusterKey=recordable("XTClusters"),
+            OutputElectronKey=recordable("XTElectrons"),
+            OutputLevel=outputLevel,
+        )
+
+
     ring_keys = []
     truth_ring_keys = []
+    xt_ring_keys = []
+
     acc_rings = []
     acc_rings_truth = []
+    acc_rings_xt = []
 
     for flag_name, (topology, key_suffix) in TOPOLOGY_MAP.items():
         if not getattr(flags, flag_name):
@@ -206,8 +266,26 @@ def main(
             )
         )
 
+        if CaloFlags.DoCrossTalk:
+            acc_rings_xt.append(
+                CaloRingsBuilderCfg(
+                    f"CaloRingsBuilder_XT_{topology}",
+                    InputClusterKey=recordable("XTClusters"),
+                    OutputRingerKey=recordable(f"XT{key_suffix}"),
+                    HistogramPath=f"Expert/XT{key_suffix}",
+                    OutputLevel=outputLevel,
+                    RingerTopology=topology,
+                    **extra,
+                )
+            )
+            
+
         ring_keys.append(recordable(key_suffix))
         truth_ring_keys.append(recordable(f"Truth{key_suffix}"))
+        if CaloFlags.DoCrossTalk:
+            xt_ring_keys.append(recordable(f"XT{key_suffix}"))
+
+
 
     AOD = RootStreamAODMaker(
         "RootStreamAODMaker",
@@ -216,13 +294,20 @@ def main(
         InputTruthKey=recordable("Particles"),
         InputCellsKey=recordable("Cells"),
         InputTruthCellsKey=recordable("TruthCells"),
+        InputXTCellsKey=recordable("XTCells"),
         InputClusterKey=recordable("Clusters"),
         InputTruthClusterKey=recordable("TruthClusters"),
+        InputXTClusterKey=recordable("XTClusters"),
         InputRingerKeys=ring_keys,
         InputTruthRingerKeys=truth_ring_keys,
+        InputXTRingerKeys=xt_ring_keys,
         InputElectronKey=recordable("Electrons"),
         InputTruthElectronKey=recordable("TruthElectrons"),
+        InputXTElectronKey=recordable("XTElectrons"),
         InputRingerL0Key=recordable("RingsL0"),
+        InputTruthRingerL0Key=recordable("TruthRingsL0"),
+        InputXTRingerL0Key=recordable("XTRingsL0"),
+        DumpCrossTalkCells=CaloFlags.DoCrossTalk,
         OutputLevel=outputLevel,
     )
 
@@ -232,12 +317,21 @@ def main(
         acc += rings
     acc += ringsL0
     acc += hypo
+
     acc += cluster_truth
     for rings_truth in acc_rings_truth:
         acc += rings_truth
+    acc += ringsL0_truth
     acc += hypo_truth
-    acc += AOD
 
+    if CaloFlags.DoCrossTalk:
+        acc += cluster_xt
+        for rings_xt in acc_rings_xt:
+            acc += rings_xt
+        acc += ringsL0_xt
+        acc += hypo_xt
+
+    acc += AOD
     acc.run(events)
 
 

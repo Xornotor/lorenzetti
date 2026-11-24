@@ -52,6 +52,8 @@ class CaloCellMerge : public Gaugi::Algorithm
     std::string m_truthCellsKey;
     /*! Flag to dump Crosstalk contaminated cells*/
     bool m_dumpXTCells;
+    /*! hits of the event (empty: no check): the hits with energy and no cell are counted and reported */
+    std::string m_hitsKey;
 };
 
 

@@ -81,7 +81,8 @@ class CaloCellBuilder( Logger ):
 
     MSG_INFO(self, "Configure CaloCellBuilder.")
   
-    for samp in self.Detector.samplings:
+    # the samplings and, with the ATLAS FCal cells (geometry/python/v2/FCAL.py), its modules
+    for samp in list(self.Detector.samplings) + list(getattr(self.Detector, 'fcal_modules', [])):
 
       DoCrosstalk = True if CaloFlags.DoCrossTalk and (samp.Sampling == CaloSampling.EMEC2 or samp.Sampling == CaloSampling.EMB2) else False
 
@@ -97,7 +98,7 @@ class CaloCellBuilder( Logger ):
                               DeformationMean = 0.0, 
                               DeformationStd  = 0.0,
                               NoiseMean       = 0.0,
-                              NoiseStd        = samp.Noise,
+                              NoiseStd        = getattr(samp, 'DigitNoise', samp.Noise),
                               StartSamplingBC = samp.StartSamplingBC, 
                               )
      
@@ -174,6 +175,7 @@ class CaloCellBuilder( Logger ):
                               # input key
                               InputCollectionKeys   = self.OutputCollectionKeys, # descriptors
                               InputXTCollectionKeys = self.OutputXTCollectionKeys, # XT Contaminated descriptors
+                              InputHitsKey          = self.InputHitsKey, # to count the hits without a cell
                               # output key
                               OutputTruthCellsKey   = self.OutputTruthCellsKey , # cells
                               OutputCellsKey        = self.OutputCellsKey      , # cells

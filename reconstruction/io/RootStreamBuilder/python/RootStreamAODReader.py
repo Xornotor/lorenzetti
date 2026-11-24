@@ -21,6 +21,12 @@ class RootStreamAODReader(Cpp):
         OutputTruthClusterKey: str,
         OutputTruthRingerKeys: list,  # Alterado para aceitar uma lista de strings
         OutputTruthElectronKey: str,
+        OutputXTCellsKey: str,
+        OutputXTClusterKey: str,
+        OutputXTRingerKeys: list,
+        OutputXTRingerL0Key: str,
+        OutputXTElectronKey: str,
+        DumpCrossTalkCells: bool = False,
         OutputLevel: int = 0,
         NtupleName: str = "CollectionTree",
     ):
@@ -36,6 +42,12 @@ class RootStreamAODReader(Cpp):
         self.setProperty("OutputElectronKey", OutputElectronKey)
         self.setProperty("OutputTruthClusterKey", OutputTruthClusterKey)
         self.setProperty("OutputTruthElectronKey", OutputTruthElectronKey)
+        self.setProperty("OutputXTCellsKey", OutputXTCellsKey)
+        self.setProperty("OutputXTClusterKey", OutputXTClusterKey)
+        self.setProperty("OutputXTRingerKeys", OutputXTRingerKeys)
+        self.setProperty("OutputXTRingerL0Key", OutputXTRingerL0Key)
+        self.setProperty("OutputXTElectronKey", OutputXTElectronKey)
+        self.setProperty("DumpCrossTalkCells", DumpCrossTalkCells)
 
         # Novas propriedades de listas (Múltiplas coleções)
         self.setProperty("OutputRingerKeys", OutputRingerKeys)

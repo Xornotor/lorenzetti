@@ -92,6 +92,10 @@ private:
                       std::map<unsigned long int, const xAOD::CaloCell *> &cell_map,
                       bool dump_descriptor = true) const;
 
+  StatusCode serializeXTCells(SG::EventContext &ctx,
+                        std::vector<xAOD::CaloCell_t> *container_cells,
+                        std::vector<xAOD::CaloDetDescriptor_t> *container_descriptor) const;
+
   std::string m_ntupleName;
 
   std::string m_inputCellsKey;
@@ -106,6 +110,11 @@ private:
   std::string m_inputTruthRingerKey;
   std::string m_inputElectronKey;
   std::string m_inputTruthElectronKey;
+  std::string m_inputXTCellsKey;
+  std::string m_inputXTClusterKey;
+  std::string m_inputXTRingerL0Key;
+  std::string m_inputXTElectronKey;
+  std::string m_inputTruthRingerL0Key;
 
   std::string m_outputCellsKey;
   std::string m_outputEventKey;
@@ -119,13 +128,21 @@ private:
   std::string m_outputTruthClusterKey;
   std::string m_outputTruthRingerKey;
   std::string m_outputTruthElectronKey;
+  std::string m_outputXTCellsKey;
+  std::string m_outputXTClusterKey;
+  std::string m_outputXTRingerL0Key;
+  std::string m_outputXTElectronKey;
+  std::string m_outputTruthRingerL0Key;
 
   std::vector<std::string> m_inputRingerKeys;
   std::vector<std::string> m_outputRingerKeys;
   std::vector<std::string> m_inputTruthRingerKeys;
   std::vector<std::string> m_outputTruthRingerKeys;
+  std::vector<std::string> m_inputXTRingerKeys;
+  std::vector<std::string> m_outputXTRingerKeys;
 
   bool m_dumpCells;
+  bool m_dumpXTCells;
   int m_outputLevel;
 };
 

@@ -14,12 +14,17 @@ class RootStreamNtupleMaker(Cpp):
         InputTruthKey: str,
         InputSeedsKey: str,
         InputClusterKey: str,
-        InputRingerKeys: str,
+        InputRingerKeys: list,
         InputRingerL0Key: str,
         InputTruthClusterKey: str,
-        InputTruthRingerKeys: str,
+        InputTruthRingerKeys: list,
         InputTruthElectronKey: str,
         InputElectronKey: str,
+        InputXTClusterKey: str = "XTClusters",
+        InputXTRingerKeys: list = None,
+        InputXTRingerL0Key: str = "XTRingsL0",
+        InputXTElectronKey: str = "XTElectrons",
+        DumpCrossTalkCells: bool = False,
         OutputLevel: int = 0,
         OutputNtupleName: str = "events",
     ):
@@ -35,5 +40,10 @@ class RootStreamNtupleMaker(Cpp):
         self.setProperty("InputTruthRingerKeys", InputTruthRingerKeys)
         self.setProperty("InputTruthElectronKey", InputTruthElectronKey)
         self.setProperty("InputElectronKey", InputElectronKey)
+        self.setProperty("InputXTClusterKey", InputXTClusterKey)
+        self.setProperty("InputXTRingerKeys", InputXTRingerKeys or [])
+        self.setProperty("InputXTRingerL0Key", InputXTRingerL0Key)
+        self.setProperty("InputXTElectronKey", InputXTElectronKey)
+        self.setProperty("DumpCrossTalkCells", DumpCrossTalkCells)
         self.setProperty("OutputNtupleName", OutputNtupleName)
         self.setProperty("OutputLevel", OutputLevel)

@@ -56,11 +56,16 @@ private:
   std::string m_truthClusterKey;
   std::string m_truthRingerKey;
   std::string m_truthElectronKey;
+  std::string m_xtClusterKey;
+  std::string m_xtRingerL0Key;
+  std::string m_xtElectronKey;
   std::string m_outputNtupleName;
 
   std::vector<std::string> m_ringerKeys;
   std::vector<std::string> m_truthRingerKeys;
+  std::vector<std::string> m_xtRingerKeys;
 
+  bool m_doCrosstalk;
   int m_outputLevel;
 };
 

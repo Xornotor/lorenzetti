@@ -70,6 +70,10 @@ class RootStreamESDMaker : public Gaugi::Algorithm
     
     bool m_dumpXTCells;
     float m_etaWindow, m_phiWindow;
+    // If true (default), only the cells inside the RoI around the truth particles are saved; if false, all cells
+    bool m_onlyRoI;
+
+
     int m_outputLevel;
 };
 
