@@ -18,8 +18,7 @@ from RootStreamBuilder.RootStreamFlags import RootStreamAODFlags as flags
 from reco.reco_job import merge_args, update_args, create_parallel_job
 
 
-# imports adicionados para adapataco
-from CaloCellBuilder import CaloFlags # vai ser usada para saber se o crostalk esta ativo etc.
+from CaloCellBuilder import CaloFlags
 
 
 
@@ -112,9 +111,6 @@ def main(
     acc = ComponentAccumulator("ComponentAccumulator", output_file)
 
 
-    # leitura do aquivo ESD gerado na etapa de Digitalizacao
-    # PROBLEMA :
-    #
     ESD = RootStreamESDReader(
         "ESDReader",
         InputFile=input_file,
@@ -124,17 +120,11 @@ def main(
         OutputTruthKey=recordable("Particles"),
         OutputSeedsKey=recordable("Seeds"),
         OutputLevel=outputLevel,
-        # O  RootStreamESDReader definido NESTE LOCAL    reconstruction/io/RootStreamBuilder/python/RootStreamESDReader.py,
-        # exige TAMBEM  estes dois argumentos, que faltavam nesta chamada. ENTAO ACRESCENTEI SO DOOIS 
-        #  1 - A chave nomeia a coleção XTCells criada em memória 
-        #  2-  a flag habilita
-        # o nosso arquivo ESD tem esses parametros.
         OutputXTCellsKey=recordable("XTCells"),
-        DumpCrossTalkCells=CaloFlags.DoCrossTalk, # foi adicioando o importe no inicio para esse flag
+        DumpCrossTalkCells=CaloFlags.DoCrossTalk,
     )
     ESD.merge(acc)
 
-    # cria o cluster para o sinal sem crostalk - dados sem crostalk - energia e tempo - estimados pelo OF
     cluster = CaloClusterMaker(
         "CaloClusterMaker",
         InputCellsKey=recordable("Cells"),
@@ -146,7 +136,6 @@ def main(
         OutputLevel=outputLevel,
     )
 
-   # cria o cluster para o sinal da verdade da simulacao - o tempo e energai vindos diretor da simulacao sem pasa pelo OF
     cluster_truth = CaloClusterMaker(
         "CaloClusterMaker_Truth",
         InputCellsKey=recordable("TruthCells"),
@@ -158,9 +147,8 @@ def main(
         OutputLevel=outputLevel,
     )
 
-    # Eu acrescentei um para o CROSSTALK igual ao primeiro so que com o sinal contaminado com crosstalk
 
-    if CaloFlags.DoCrossTalk: # aqui tem o if diferente dos demais porque depende do crostakl estar ativo
+    if CaloFlags.DoCrossTalk:
         cluster_xt = CaloClusterMaker(
             "CaloClusterMaker_XT",
             InputCellsKey=recordable("XTCells"),
@@ -174,7 +162,6 @@ def main(
 
 
 
-    # DEVO REPLICAR ESSE BLOCO PARA OS OUTROS 2
     ringsL0 = CaloRingsBuilderCfg(
         "CaloRingsBuilderL0",
         InputClusterKey=recordable("Clusters"),
@@ -186,9 +173,6 @@ def main(
     )
 
 
-    # Acrescentei anEis para o caminho Truth, usando os clusters de referência[VERDADE]
-    # Mantive o mesmo corte em sigma para comparar com os RingsL0 normais
-    #MAS NAO TENHO CERTEZA NESSE SigmaCut ja que o dado da simulacao Truth é perfeito    
 
     ringsL0_truth = CaloRingsBuilderCfg(
         "CaloRingsBuilderL0_Truth",
@@ -200,8 +184,7 @@ def main(
         SigmaCut=flags.SigmaCut,
     )
 
-    # Acrescentei anéis para o caminho XT, usando os clusters com crosstalk.
-    if CaloFlags.DoCrossTalk:  # Só configura esse caminho quando o crosstalk está ativo.
+    if CaloFlags.DoCrossTalk:
         ringsL0_xt = CaloRingsBuilderCfg(
             "CaloRingsBuilderL0_XT",
             InputClusterKey=recordable("XTClusters"),
@@ -227,9 +210,7 @@ def main(
         OutputLevel=outputLevel,
     )
 
-    # eu acerscentei o caminho do Crosstalk igual ao Normal so que usando XTClusters
-    # a Saida fica em XTElectrons para nao misturar com os Electrons normais
-    if CaloFlags.DoCrossTalk:  # esse if so monta o caminho quando o Crosstalk esta ativo
+    if CaloFlags.DoCrossTalk:
         hypo_xt = ElectronBuilderCfg(
             "ElectronBuilder_XT",
             InputClusterKey=recordable("XTClusters"),
@@ -240,11 +221,11 @@ def main(
 
     ring_keys = []
     truth_ring_keys = []
-    xt_ring_keys = [] # nomes das Saidas de aneis do XT
+    xt_ring_keys = []
 
     acc_rings = []
     acc_rings_truth = []
-    acc_rings_xt = [] # algoritmos que vao criar os aneis do XT
+    acc_rings_xt = []
 
     for flag_name, (topology, key_suffix) in TOPOLOGY_MAP.items():
         if not getattr(flags, flag_name):
@@ -285,8 +266,7 @@ def main(
             )
         )
 
-        # acerscentei o caminho XT para criar os aneis usando os XTClusters
-        if CaloFlags.DoCrossTalk:  # so cria os aneis XT se o Crosstalk estiver ativo
+        if CaloFlags.DoCrossTalk:
             acc_rings_xt.append(
                 CaloRingsBuilderCfg(
                     f"CaloRingsBuilder_XT_{topology}",
@@ -302,13 +282,11 @@ def main(
 
         ring_keys.append(recordable(key_suffix))
         truth_ring_keys.append(recordable(f"Truth{key_suffix}"))
-        # acerscentei a chave dos anEis XT separada das outras Saidas
         if CaloFlags.DoCrossTalk:
             xt_ring_keys.append(recordable(f"XT{key_suffix}"))
 
 
 
-# agora precisa ajustar o AOD 
     AOD = RootStreamAODMaker(
         "RootStreamAODMaker",
         InputEventKey=recordable("Events"),
@@ -316,24 +294,23 @@ def main(
         InputTruthKey=recordable("Particles"),
         InputCellsKey=recordable("Cells"),
         InputTruthCellsKey=recordable("TruthCells"),
-        InputXTCellsKey=recordable("XTCells"),  # acrescentei as celulas com Crosstalk
+        InputXTCellsKey=recordable("XTCells"),
         InputClusterKey=recordable("Clusters"),
         InputTruthClusterKey=recordable("TruthClusters"),
-        InputXTClusterKey=recordable("XTClusters"),  # acrescentei os clusters do caminho XT
+        InputXTClusterKey=recordable("XTClusters"),
         InputRingerKeys=ring_keys,
         InputTruthRingerKeys=truth_ring_keys,
-        InputXTRingerKeys=xt_ring_keys,  # acrescentei a lista de aneis do caminho XT
+        InputXTRingerKeys=xt_ring_keys,
         InputElectronKey=recordable("Electrons"),
         InputTruthElectronKey=recordable("TruthElectrons"),
-        InputXTElectronKey=recordable("XTElectrons"),  # acrescentei os eletrons do caminho XT
+        InputXTElectronKey=recordable("XTElectrons"),
         InputRingerL0Key=recordable("RingsL0"),
-        InputTruthRingerL0Key=recordable("TruthRingsL0"),  # acrescentei o RingsL0 da linha Truth
-        InputXTRingerL0Key=recordable("XTRingsL0"),  # acrescentei o RingsL0 do caminho XT
-        DumpCrossTalkCells=CaloFlags.DoCrossTalk,  # acrescentei a flag para gravar o caminho XT quando estiver ativo
+        InputTruthRingerL0Key=recordable("TruthRingsL0"),
+        InputXTRingerL0Key=recordable("XTRingsL0"),
+        DumpCrossTalkCells=CaloFlags.DoCrossTalk,
         OutputLevel=outputLevel,
     )
 
-    #AJUSTAR A SEQUENCIA     
     # sequence
     acc += cluster
     for rings in acc_rings:
@@ -344,15 +321,15 @@ def main(
     acc += cluster_truth
     for rings_truth in acc_rings_truth:
         acc += rings_truth
-    acc += ringsL0_truth  # acrescentei o RingsL0 da linha Truth [ESSE TEM QUE CONSIDERAR DEPOIS SE FAZ SENTINDO OU NAO]
+    acc += ringsL0_truth
     acc += hypo_truth
 
-    if CaloFlags.DoCrossTalk:  # acrescentei a sequencia XT so quando o Crosstalk estiver ativo
+    if CaloFlags.DoCrossTalk:
         acc += cluster_xt
         for rings_xt in acc_rings_xt:
             acc += rings_xt
-        acc += ringsL0_xt  # acrescentei o RingsL0 do caminho XT
-        acc += hypo_xt  # acrescentei os eletrons do caminho XT
+        acc += ringsL0_xt
+        acc += hypo_xt
 
     acc += AOD
     acc.run(events)

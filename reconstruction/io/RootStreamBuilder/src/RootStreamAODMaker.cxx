@@ -52,11 +52,11 @@ RootStreamAODMaker::RootStreamAODMaker(std::string name) : IMsgService(name),
   declareProperty("InputTruthClusterKey", m_inputTruthClusterKey = "TruthClusters");
   declareProperty("InputTruthRingerKey", m_inputTruthRingerKey = "TruthRings");
   declareProperty("InputTruthElectronKey", m_inputTruthElectronKey = "TruthElectrons");
-  declareProperty("InputXTCellsKey", m_inputXTCellsKey = "XTCells"); // recebe as celulas XT
-  declareProperty("InputXTClusterKey", m_inputXTClusterKey = "XTClusters"); // recebe os clusters XT
-  declareProperty("InputXTRingerL0Key", m_inputXTRingerL0Key = "XTRingsL0"); // recebe os aneis L0 XT
-  declareProperty("InputXTElectronKey", m_inputXTElectronKey = "XTElectrons"); // recebe os eletrons XT
-  declareProperty("InputTruthRingerL0Key", m_inputTruthRingerL0Key = "TruthRingsL0"); // recebe os aneis L0 da verdade
+  declareProperty("InputXTCellsKey", m_inputXTCellsKey = "XTCells");
+  declareProperty("InputXTClusterKey", m_inputXTClusterKey = "XTClusters");
+  declareProperty("InputXTRingerL0Key", m_inputXTRingerL0Key = "XTRingsL0");
+  declareProperty("InputXTElectronKey", m_inputXTElectronKey = "XTElectrons");
+  declareProperty("InputTruthRingerL0Key", m_inputTruthRingerL0Key = "TruthRingsL0");
 
   declareProperty("OutputEventKey", m_outputEventKey = "EventInfo");
   declareProperty("OutputSeedsKey", m_outputSeedsKey = "Seeds");
@@ -72,23 +72,23 @@ RootStreamAODMaker::RootStreamAODMaker(std::string name) : IMsgService(name),
   declareProperty("OutputTruthClusterKey", m_outputTruthClusterKey = "TruthClusters");
   declareProperty("OutputTruthRingerKey", m_outputTruthRingerKey = "TruthRings");
   declareProperty("OutputTruthElectronKey", m_outputTruthElectronKey = "TruthElectrons");
-  declareProperty("OutputXTCellsKey", m_outputXTCellsKey = "XTCells"); // nomeia os ramos de celulas XT
-  declareProperty("OutputXTClusterKey", m_outputXTClusterKey = "XTClusters"); // nomeia o ramo de clusters XT
-  declareProperty("OutputXTRingerL0Key", m_outputXTRingerL0Key = "XTRingsL0"); // nomeia o ramo de aneis L0 XT
-  declareProperty("OutputXTElectronKey", m_outputXTElectronKey = "XTElectrons"); // nomeia o ramo de eletrons XT
-  declareProperty("OutputTruthRingerL0Key", m_outputTruthRingerL0Key = "TruthRingsL0"); // nomeia o ramo de aneis L0 da verdade
+  declareProperty("OutputXTCellsKey", m_outputXTCellsKey = "XTCells");
+  declareProperty("OutputXTClusterKey", m_outputXTClusterKey = "XTClusters");
+  declareProperty("OutputXTRingerL0Key", m_outputXTRingerL0Key = "XTRingsL0");
+  declareProperty("OutputXTElectronKey", m_outputXTElectronKey = "XTElectrons");
+  declareProperty("OutputTruthRingerL0Key", m_outputTruthRingerL0Key = "TruthRingsL0");
 
   declareProperty("OutputLevel", m_outputLevel = 1);
   declareProperty("NtupleName", m_ntupleName = "physics");
   declareProperty("DumpCells", m_dumpCells = false);
-  declareProperty("DumpCrossTalkCells", m_dumpXTCells = false); // habilita os ramos XT
+  declareProperty("DumpCrossTalkCells", m_dumpXTCells = false);
 
   declareProperty("InputRingerKeys", m_inputRingerKeys = {"Rings"});
   declareProperty("InputTruthRingerKeys", m_inputTruthRingerKeys = {"TruthRings"});
   declareProperty("OutputRingerKeys", m_outputRingerKeys = {"Rings"});
   declareProperty("OutputTruthRingerKeys", m_outputTruthRingerKeys = {"TruthRings"});
-  declareProperty("InputXTRingerKeys", m_inputXTRingerKeys = {"XTRings"}); // recebe as topologias XT
-  declareProperty("OutputXTRingerKeys", m_outputXTRingerKeys = {"XTRings"}); // nomeia as topologias XT
+  declareProperty("InputXTRingerKeys", m_inputXTRingerKeys = {"XTRings"});
+  declareProperty("OutputXTRingerKeys", m_outputXTRingerKeys = {"XTRings"});
 }
 
 //!=====================================================================
@@ -127,12 +127,12 @@ StatusCode RootStreamAODMaker::bookHistograms(SG::EventContext &ctx) const
   std::vector<xAOD::CaloCluster_t> container_clus_truth;
   std::vector<xAOD::CaloRings_t> container_rings_truth;
   std::vector<xAOD::Electron_t> container_electron_truth;
-  std::vector<xAOD::CaloRings_t> container_ringsL0_truth; // guarda os aneis L0 da verdade
-  std::vector<xAOD::CaloCell_t> container_xtcells; // guarda as celulas XT
-  std::vector<xAOD::CaloDetDescriptor_t> container_xtdescriptor; // guarda os descritores XT
-  std::vector<xAOD::CaloCluster_t> container_xt_clus; // guarda os clusters XT
-  std::vector<xAOD::CaloRings_t> container_xt_ringsL0; // guarda os aneis L0 XT
-  std::vector<xAOD::Electron_t> container_xt_electron; // guarda os eletrons XT
+  std::vector<xAOD::CaloRings_t> container_ringsL0_truth;
+  std::vector<xAOD::CaloCell_t> container_xtcells;
+  std::vector<xAOD::CaloDetDescriptor_t> container_xtdescriptor;
+  std::vector<xAOD::CaloCluster_t> container_xt_clus;
+  std::vector<xAOD::CaloRings_t> container_xt_ringsL0;
+  std::vector<xAOD::Electron_t> container_xt_electron;
 
   store->cd();
   TTree *tree = new TTree(m_ntupleName.c_str(), "");
@@ -149,7 +149,7 @@ StatusCode RootStreamAODMaker::bookHistograms(SG::EventContext &ctx) const
   tree->Branch(("CaloClusterContainer_" + m_outputTruthClusterKey).c_str(), &container_clus_truth);
   // tree->Branch(("CaloRingsContainer_" + m_outputTruthRingerKey).c_str(), &container_rings_truth);
   tree->Branch(("ElectronContainer_" + m_outputTruthElectronKey).c_str(), &container_electron_truth);
-  tree->Branch(("CaloRingsContainer_" + m_outputTruthRingerL0Key).c_str(), &container_ringsL0_truth); // cria o ramo de aneis L0 da verdade
+  tree->Branch(("CaloRingsContainer_" + m_outputTruthRingerL0Key).c_str(), &container_ringsL0_truth);
 
   // ADICIONAR
   for (const auto &key : m_outputRingerKeys)
@@ -162,7 +162,7 @@ StatusCode RootStreamAODMaker::bookHistograms(SG::EventContext &ctx) const
     std::vector<xAOD::CaloRings_t> tmp;
     tree->Branch(("CaloRingsContainer_" + key).c_str(), &tmp);
   }
-  if (m_dumpXTCells) // cria os ramos XT quando o crosstalk estiver ativo
+  if (m_dumpXTCells)
   {
     tree->Branch(("CaloCellContainer_" + m_outputXTCellsKey).c_str(), &container_xtcells);
     tree->Branch(("CaloDetDescriptorContainer_" + m_outputXTCellsKey).c_str(), &container_xtdescriptor);
@@ -275,12 +275,12 @@ StatusCode RootStreamAODMaker::serialize(EventContext &ctx) const
   std::vector<xAOD::CaloCell_t> *container_cells_truth = nullptr;
   std::vector<xAOD::CaloCluster_t> *container_clus_truth = nullptr;
   std::vector<xAOD::Electron_t> *container_electron_truth = nullptr;
-  std::vector<xAOD::CaloRings_t> *container_ringsL0_truth = nullptr; // recebe os aneis L0 da verdade
-  std::vector<xAOD::CaloCell_t> *container_xtcells = nullptr; // recebe as celulas XT
-  std::vector<xAOD::CaloDetDescriptor_t> *container_xtdescriptor = nullptr; // recebe os descritores XT
-  std::vector<xAOD::CaloCluster_t> *container_xt_clus = nullptr; // recebe os clusters XT
-  std::vector<xAOD::CaloRings_t> *container_xt_ringsL0 = nullptr; // recebe os aneis L0 XT
-  std::vector<xAOD::Electron_t> *container_xt_electron = nullptr; // recebe os eletrons XT
+  std::vector<xAOD::CaloRings_t> *container_ringsL0_truth = nullptr;
+  std::vector<xAOD::CaloCell_t> *container_xtcells = nullptr;
+  std::vector<xAOD::CaloDetDescriptor_t> *container_xtdescriptor = nullptr;
+  std::vector<xAOD::CaloCluster_t> *container_xt_clus = nullptr;
+  std::vector<xAOD::CaloRings_t> *container_xt_ringsL0 = nullptr;
+  std::vector<xAOD::Electron_t> *container_xt_electron = nullptr;
 
   MSG_DEBUG("Link all branches...");
   InitBranch(tree, ("EventInfoContainer_" + m_outputEventKey).c_str(), &container_event);
@@ -291,8 +291,8 @@ StatusCode RootStreamAODMaker::serialize(EventContext &ctx) const
   InitBranch(tree, ("ElectronContainer_" + m_outputElectronKey).c_str(), &container_electron);
   InitBranch(tree, ("CaloClusterContainer_" + m_outputTruthClusterKey).c_str(), &container_clus_truth);
   InitBranch(tree, ("ElectronContainer_" + m_outputTruthElectronKey).c_str(), &container_electron_truth);
-  InitBranch(tree, ("CaloRingsContainer_" + m_outputTruthRingerL0Key).c_str(), &container_ringsL0_truth); // liga o ramo de aneis L0 da verdade
-  if (m_dumpXTCells) // liga os ramos XT quando o crosstalk estiver ativo
+  InitBranch(tree, ("CaloRingsContainer_" + m_outputTruthRingerL0Key).c_str(), &container_ringsL0_truth);
+  if (m_dumpXTCells)
   {
     InitBranch(tree, ("CaloCellContainer_" + m_outputXTCellsKey).c_str(), &container_xtcells);
     InitBranch(tree, ("CaloDetDescriptorContainer_" + m_outputXTCellsKey).c_str(), &container_xtdescriptor);
@@ -326,7 +326,7 @@ StatusCode RootStreamAODMaker::serialize(EventContext &ctx) const
     if (ctx.exist(m_inputTruthRingerKeys[i]))
       serializeCaloRings(ctx, m_inputTruthRingerKeys[i], containers_rings_truth[i]);
   }
-  std::vector<std::vector<xAOD::CaloRings_t> *> containers_xt_rings(m_outputXTRingerKeys.size(), nullptr); // prepara as topologias XT
+  std::vector<std::vector<xAOD::CaloRings_t> *> containers_xt_rings(m_outputXTRingerKeys.size(), nullptr);
   if (m_dumpXTCells)
   {
     for (size_t i = 0; i < m_outputXTRingerKeys.size(); ++i)
@@ -365,14 +365,14 @@ StatusCode RootStreamAODMaker::serialize(EventContext &ctx) const
   {
     serializeElectrons(ctx, m_inputTruthElectronKey, container_electron_truth);
   }
-  if (ctx.exist(m_inputTruthRingerL0Key)) // grava os aneis L0 da verdade quando disponiveis
+  if (ctx.exist(m_inputTruthRingerL0Key))
     serializeCaloRings(ctx, m_inputTruthRingerL0Key, container_ringsL0_truth);
 
-  if (m_dumpXTCells) // grava as colecoes XT do evento
+  if (m_dumpXTCells)
   {
     if (serializeXTCells(ctx, container_xtcells, container_xtdescriptor).isFailure())
       return StatusCode::FAILURE;
-    if (ctx.exist(m_inputXTClusterKey)) // grava os clusters XT sem duplicar as celulas XT
+    if (ctx.exist(m_inputXTClusterKey))
     {
       SG::ReadHandle<xAOD::CaloClusterContainer> xt_clusters(m_inputXTClusterKey, ctx);
       for (const auto cluster : **xt_clusters.ptr())

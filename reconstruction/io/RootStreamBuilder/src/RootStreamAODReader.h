@@ -58,19 +58,19 @@ private:
   std::string m_truthClusterKey;
   std::string m_truthRingerKey;
   std::string m_truthElectronKey;
-  std::string m_xtCellsKey;    // acrescentei a chave das XTCells
-  std::string m_xtClusterKey;  // acrescentei a chave dos XTClusters
-  std::string m_xtRingerL0Key; // acrescentei a chave dos XTRingsL0
-  std::string m_xtElectronKey; // acrescentei a chave dos XTElectrons
+  std::string m_xtCellsKey;
+  std::string m_xtClusterKey;
+  std::string m_xtRingerL0Key;
+  std::string m_xtElectronKey;
   std::string m_ntupleName;
   std::string m_inputFile;
 
   std::vector<std::string> m_ringerKeys;
   std::vector<std::string> m_truthRingerKeys;
-  std::vector<std::string> m_xtRingerKeys; // acrescentei as chaves dos aneis XT
+  std::vector<std::string> m_xtRingerKeys;
 
 
-  bool m_doCrosstalk; // guarda se o Reader deve exigir e ler os dados XT
+  bool m_doCrosstalk;
   int m_outputLevel;
 
 

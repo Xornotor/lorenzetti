@@ -48,12 +48,12 @@ RootStreamAODReader::RootStreamAODReader(std::string name) : IMsgService(name),
   declareProperty("OutputTruthClusterKey", m_truthClusterKey = "TruthClusters");
   // declareProperty("OutputTruthRingerKey", m_truthRingerKey = "TruthRings");
   declareProperty("OutputTruthElectronKey", m_truthElectronKey = "TruthElectrons");
-  declareProperty("OutputXTCellsKey", m_xtCellsKey = "XTCells");           // acrescentei a chave das celulas XT
-  declareProperty("OutputXTClusterKey", m_xtClusterKey = "XTClusters");    // acrescentei a chave dos clusters XT
-  declareProperty("OutputXTRingerL0Key", m_xtRingerL0Key = "XTRingsL0");   // acrescentei a chave dos aneis L0 XT
-  declareProperty("OutputXTElectronKey", m_xtElectronKey = "XTElectrons"); // acrescentei a chave dos eletrons XT  
+  declareProperty("OutputXTCellsKey", m_xtCellsKey = "XTCells");
+  declareProperty("OutputXTClusterKey", m_xtClusterKey = "XTClusters");
+  declareProperty("OutputXTRingerL0Key", m_xtRingerL0Key = "XTRingsL0");
+  declareProperty("OutputXTElectronKey", m_xtElectronKey = "XTElectrons");
 
-  declareProperty("DumpCrossTalkCells", m_doCrosstalk = false); // recebe do Python a opcao de ler os dados XT
+  declareProperty("DumpCrossTalkCells", m_doCrosstalk = false);
 
 
   declareProperty("OutputLevel", m_outputLevel = 1);
@@ -62,7 +62,7 @@ RootStreamAODReader::RootStreamAODReader(std::string name) : IMsgService(name),
 
   declareProperty("OutputRingerKeys", m_ringerKeys = {"Rings"});
   declareProperty("OutputTruthRingerKeys", m_truthRingerKeys = {"TruthRings"});
-  declareProperty("OutputXTRingerKeys", m_xtRingerKeys = {"XTRings"}); // acrescentei a lista de aneis XT
+  declareProperty("OutputXTRingerKeys", m_xtRingerKeys = {"XTRings"});
 }
 
 //!=====================================================================
@@ -157,11 +157,11 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
   std::vector<xAOD::CaloRings_t> *collection_rings_l0 = nullptr;
   std::vector<xAOD::Electron_t> *collection_truth_el = nullptr;
 
-  std::vector<xAOD::CaloDetDescriptor_t> *collection_xtdescriptor = nullptr; // acrescentei os descritores das XTCells
-  std::vector<xAOD::CaloCell_t> *collection_xtcells = nullptr;               // acrescentei as celulas XT
-  std::vector<xAOD::CaloCluster_t> *collection_xt_clus = nullptr;            // acrescentei os clusters XT
-  std::vector<xAOD::CaloRings_t> *collection_xt_rings_l0 = nullptr;          // acrescentei os aneis L0 XT
-  std::vector<xAOD::Electron_t> *collection_xt_el = nullptr;                 // acrescentei os eletrons XT
+  std::vector<xAOD::CaloDetDescriptor_t> *collection_xtdescriptor = nullptr;
+  std::vector<xAOD::CaloCell_t> *collection_xtcells = nullptr;
+  std::vector<xAOD::CaloCluster_t> *collection_xt_clus = nullptr;
+  std::vector<xAOD::CaloRings_t> *collection_xt_rings_l0 = nullptr;
+  std::vector<xAOD::Electron_t> *collection_xt_el = nullptr;
 
   MSG_DEBUG("Link all branches...");
 
@@ -204,7 +204,7 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
   InitBranch(tree, ("CaloRingsContainer_" + m_ringerL0Key).c_str(), &collection_rings_l0);
   InitBranch(tree, ("ElectronContainer_" + m_truthElectronKey).c_str(), &collection_truth_el);
 
-  if (m_doCrosstalk) // so liga os ramos XT quando a leitura de crosstalk estiver ativa
+  if (m_doCrosstalk)
   {
     InitBranch(tree, ("CaloCellContainer_" + m_xtCellsKey).c_str(), &collection_xtcells);
     InitBranch(tree, ("CaloDetDescriptorContainer_" + m_xtCellsKey).c_str(), &collection_xtdescriptor);
@@ -215,13 +215,13 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
 
   std::vector<std::vector<xAOD::CaloRings_t> *> collections_rings(m_ringerKeys.size(), nullptr);
   std::vector<std::vector<xAOD::CaloRings_t> *> collections_truth_rings(m_truthRingerKeys.size(), nullptr);
-  std::vector<std::vector<xAOD::CaloRings_t> *> collections_xt_rings(m_xtRingerKeys.size(), nullptr); // acrescentei a lista das topologias XT
+  std::vector<std::vector<xAOD::CaloRings_t> *> collections_xt_rings(m_xtRingerKeys.size(), nullptr);
 
   for (size_t i = 0; i < m_ringerKeys.size(); ++i)
     InitBranch(tree, ("CaloRingsContainer_" + m_ringerKeys[i]).c_str(), &collections_rings[i]);
   for (size_t i = 0; i < m_truthRingerKeys.size(); ++i)
     InitBranch(tree, ("CaloRingsContainer_" + m_truthRingerKeys[i]).c_str(), &collections_truth_rings[i]);
-  if (m_doCrosstalk) // so liga os ramos das topologias XT quando o crosstalk estiver ativo
+  if (m_doCrosstalk)
   {
     for (size_t i = 0; i < m_xtRingerKeys.size(); ++i)
       InitBranch(tree, ("CaloRingsContainer_" + m_xtRingerKeys[i]).c_str(), &collections_xt_rings[i]);
@@ -389,21 +389,20 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
       container_truth_el->push_back(el);
     }
 
-    // Parte Xt
-    xAOD::cluster_links_t xt_clus_links; // acrescentei os vinculos dos XTClusters
+    xAOD::cluster_links_t xt_clus_links;
 
-    if (m_doCrosstalk) // so reconstroi os objetos XT quando a leitura de crosstalk estiver ativa
+    if (m_doCrosstalk)
     {
-      SG::WriteHandle<xAOD::CaloClusterContainer> container_xt_clus(m_xtClusterKey, ctx); // acrescentei o container dos XTClusters
-      container_xt_clus.record(std::make_unique<xAOD::CaloClusterContainer>());           // criei a colecao XT vazia em memoria
+      SG::WriteHandle<xAOD::CaloClusterContainer> container_xt_clus(m_xtClusterKey, ctx);
+      container_xt_clus.record(std::make_unique<xAOD::CaloClusterContainer>());
 
-      SG::WriteHandle<xAOD::ElectronContainer> container_xt_el(m_xtElectronKey, ctx); // acrescentei o container dos XTElectrons
-      container_xt_el.record(std::make_unique<xAOD::ElectronContainer>());            // criei a colecao de eletrons XT vazia em memoria
+      SG::WriteHandle<xAOD::ElectronContainer> container_xt_el(m_xtElectronKey, ctx);
+      container_xt_el.record(std::make_unique<xAOD::ElectronContainer>());
 
-      SG::WriteHandle<xAOD::CaloRingsContainer> container_xt_rings_l0(m_xtRingerL0Key, ctx); // acrescentei o container dos XTRingsL0
-      container_xt_rings_l0.record(std::make_unique<xAOD::CaloRingsContainer>());            // criei a colecao de aneis L0 XT vazia em memoria
+      SG::WriteHandle<xAOD::CaloRingsContainer> container_xt_rings_l0(m_xtRingerL0Key, ctx);
+      container_xt_rings_l0.record(std::make_unique<xAOD::CaloRingsContainer>());
 
-      if (collection_xtcells && collection_xtdescriptor) // le as celulas e os descritores XT gravados no AOD
+      if (collection_xtcells && collection_xtdescriptor)
       {
         std::map<unsigned long int, xAOD::CaloDetDescriptor *> xtdescriptor_links;
         SG::WriteHandle<xAOD::CaloDetDescriptorContainer> container_xt_descriptor(m_xtCellsKey + "_Aux", ctx);
@@ -414,7 +413,7 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
           xAOD::CaloDetDescriptor *descriptor = nullptr;
           xAOD::CaloDetDescriptorConverter cnv;
           cnv.convert(descriptor_t, descriptor);
-          xtdescriptor_links[descriptor->hash()] = descriptor; // associa o descritor ao seu hash
+          xtdescriptor_links[descriptor->hash()] = descriptor;
           container_xt_descriptor->push_back(descriptor);
         }
 
@@ -426,7 +425,7 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
           xAOD::CaloCell *cell = nullptr;
           xAOD::CaloCellConverter cnv;
           cnv.convert(cell_t, cell);
-          auto descriptor = xtdescriptor_links.find(cell_t.descriptor_link); // o conversor grava o hash em descriptor_link
+          auto descriptor = xtdescriptor_links.find(cell_t.descriptor_link);
           if (descriptor == xtdescriptor_links.end())
           {
             MSG_ERROR("Missing XT descriptor for cell hash " << cell_t.descriptor_link);
@@ -438,14 +437,14 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
         }
       }
 
-      if (collection_xt_clus) // so percorre os clusters XT se o ramo foi carregado do AOD
+      if (collection_xt_clus)
       {
         for (auto &xt_clus_t : *collection_xt_clus)
         {
           xAOD::CaloCluster *xt_clus = nullptr;
           clus_cnv.convert(xt_clus_t, xt_clus);
 
-          if (seed_links.count(xt_clus_t.seed_link)) // confere se a Seed desse cluster existe em memoria
+          if (seed_links.count(xt_clus_t.seed_link))
           {
             xt_clus->setSeed(seed_links[xt_clus_t.seed_link]);
             xt_clus_links[xt_clus->seed()->id()] = xt_clus;
@@ -455,14 +454,14 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
         }
       }
 
-      if (collection_xt_el) // so percorre os eletrons XT se o ramo foi carregado do AOD
+      if (collection_xt_el)
       {
         for (auto &el_t : *collection_xt_el)
         {
           xAOD::Electron *el = nullptr;
           el_cnv.convert(el_t, el);
 
-          if (xt_clus_links.count(el_t.cluster_link)) // confere se o XTCluster ligado a esse eletron existe
+          if (xt_clus_links.count(el_t.cluster_link))
           {
             el->setCaloCluster(xt_clus_links[el_t.cluster_link]);
           }
@@ -471,14 +470,14 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
         }
       }
 
-      if (collection_xt_rings_l0) // so percorre os aneis L0 XT se o ramo foi carregado do AOD
+      if (collection_xt_rings_l0)
       {
         for (auto &rings_t : *collection_xt_rings_l0)
         {
           xAOD::CaloRings *rings = nullptr;
           rings_cnv.convert(rings_t, rings);
 
-          if (xt_clus_links.count(rings_t.cluster_link)) // confere se o XTCluster ligado a esses aneis existe
+          if (xt_clus_links.count(rings_t.cluster_link))
           {
             rings->setCaloCluster(xt_clus_links[rings_t.cluster_link]);
           }
@@ -523,21 +522,21 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
       }
     }
 
-    if (m_doCrosstalk) // so reconstroi os aneis XT quando a leitura de crosstalk estiver ativa
+    if (m_doCrosstalk)
     {
-      for (size_t i = 0; i < m_xtRingerKeys.size(); ++i) // acrescentei o caminho dos aneis XT
+      for (size_t i = 0; i < m_xtRingerKeys.size(); ++i)
       {
         SG::WriteHandle<xAOD::CaloRingsContainer> container_xt_rings(m_xtRingerKeys[i], ctx);
         container_xt_rings.record(std::make_unique<xAOD::CaloRingsContainer>());
 
-        if (collections_xt_rings[i]) // so percorre os aneis XT se esse ramo foi carregado do AOD
+        if (collections_xt_rings[i])
         {
           for (auto &rings_t : *collections_xt_rings[i])
           {
             xAOD::CaloRings *rings = nullptr;
             rings_cnv.convert(rings_t, rings);
 
-            if (xt_clus_links.count(rings_t.cluster_link)) // confere se o XTCluster ligado a esses aneis existe
+            if (xt_clus_links.count(rings_t.cluster_link))
               rings->setCaloCluster(xt_clus_links[rings_t.cluster_link]);
 
             container_xt_rings->push_back(rings);
@@ -551,7 +550,7 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
       delete c;
     for (auto *c : collections_truth_rings)
       delete c;
-    for (auto *c : collections_xt_rings) // acrescentei a limpeza dos aneis XT lidos do AOD
+    for (auto *c : collections_xt_rings)
       delete c;
   }
 
@@ -567,11 +566,11 @@ StatusCode RootStreamAODReader::deserialize(int evt, EventContext &ctx) const
   delete collection_rings_l0;
   delete collection_truth_el;
   // delete collection_xt_rings;
-  delete collection_xtdescriptor; // acrescentei a limpeza dos descritores XT
-  delete collection_xtcells;      // acrescentei a limpeza das celulas XT
-  delete collection_xt_clus;      // acrescentei a limpeza dos clusters XT
-  delete collection_xt_rings_l0;  // acrescentei a limpeza dos aneis L0 XT
-  delete collection_xt_el;        // acrescentei a limpeza dos eletrons XT
+  delete collection_xtdescriptor;
+  delete collection_xtcells;
+  delete collection_xt_clus;
+  delete collection_xt_rings_l0;
+  delete collection_xt_el;
 
   return StatusCode::SUCCESS;
 }

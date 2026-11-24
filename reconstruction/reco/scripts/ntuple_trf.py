@@ -13,7 +13,6 @@ from reco.reco_job import merge_args, update_args, create_parallel_job
 
 
 def _detect_ring_keys(input_file: str) -> tuple[list, list, list, bool]:
-    """Le as topologias de aneis e identifica se o AOD contem o caminho XT"""
     f = _ROOT.TFile.Open(input_file)
     if not f or f.IsZombie():
         return ["Rings"], ["TruthRings"], [], False
@@ -22,9 +21,9 @@ def _detect_ring_keys(input_file: str) -> tuple[list, list, list, bool]:
         f.Close()
         return ["Rings"], ["TruthRings"], [], False
 
-    ring_keys, truth_ring_keys, xt_ring_keys = [], [], []  # separa os aneis dos tres caminhos
+    ring_keys, truth_ring_keys, xt_ring_keys = [], [], []
     branch_names = {branch.GetName() for branch in tree.GetListOfBranches()}
-    do_crosstalk = "CaloClusterContainer_XTClusters" in branch_names  # reconhece um AOD com XT
+    do_crosstalk = "CaloClusterContainer_XTClusters" in branch_names
     for branch in tree.GetListOfBranches():
         name = branch.GetName()
         if not name.startswith("CaloRingsContainer_"):
@@ -33,7 +32,7 @@ def _detect_ring_keys(input_file: str) -> tuple[list, list, list, bool]:
         if key.endswith("RingsL0"):
             continue
         if key.startswith("XT"):
-            xt_ring_keys.append(key)  # evita misturar aneis XT com os normais
+            xt_ring_keys.append(key)
         elif key.startswith("Truth"):
             truth_ring_keys.append(key)
         else:
@@ -88,12 +87,12 @@ def main(
         OutputTruthRingerKeys=[recordable(k) for k in truth_ring_keys],
         OutputRingerL0Key=recordable("RingsL0"),
         OutputTruthElectronKey=recordable("TruthElectrons"),
-        OutputXTCellsKey=recordable("XTCells"),  # entrega as celulas XT lidas do AOD
-        OutputXTClusterKey=recordable("XTClusters"),  # entrega os clusters XT
-        OutputXTRingerKeys=[recordable(k) for k in xt_ring_keys],  # entrega as topologias XT
-        OutputXTRingerL0Key=recordable("XTRingsL0"),  # entrega os aneis L0 XT
-        OutputXTElectronKey=recordable("XTElectrons"),  # entrega os eletrons XT
-        DumpCrossTalkCells=do_crosstalk,  # ativa a leitura XT somente para um AOD com XT
+        OutputXTCellsKey=recordable("XTCells"),
+        OutputXTClusterKey=recordable("XTClusters"),
+        OutputXTRingerKeys=[recordable(k) for k in xt_ring_keys],
+        OutputXTRingerL0Key=recordable("XTRingsL0"),
+        OutputXTElectronKey=recordable("XTElectrons"),
+        DumpCrossTalkCells=do_crosstalk,
         NtupleName="CollectionTree",
     )
     aod.merge(acc)
@@ -111,11 +110,11 @@ def main(
         InputTruthClusterKey=recordable("TruthClusters"),
         InputTruthRingerKeys=[recordable(k) for k in truth_ring_keys],
         InputTruthElectronKey=recordable("TruthElectrons"),
-        InputXTClusterKey=recordable("XTClusters"),  # le os clusters XT do AODReader
-        InputXTRingerKeys=[recordable(k) for k in xt_ring_keys],  # le as topologias XT
-        InputXTRingerL0Key=recordable("XTRingsL0"),  # le os aneis L0 XT
-        InputXTElectronKey=recordable("XTElectrons"),  # le os eletrons XT
-        DumpCrossTalkCells=do_crosstalk,  # escreve as colunas XT quando presentes no AOD
+        InputXTClusterKey=recordable("XTClusters"),
+        InputXTRingerKeys=[recordable(k) for k in xt_ring_keys],
+        InputXTRingerL0Key=recordable("XTRingsL0"),
+        InputXTElectronKey=recordable("XTElectrons"),
+        DumpCrossTalkCells=do_crosstalk,
         OutputNtupleName="physics",
     )
     acc += ntuple

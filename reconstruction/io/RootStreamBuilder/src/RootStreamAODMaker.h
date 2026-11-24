@@ -110,11 +110,11 @@ private:
   std::string m_inputTruthRingerKey;
   std::string m_inputElectronKey;
   std::string m_inputTruthElectronKey;
-  std::string m_inputXTCellsKey; // chave das celulas XT em memoria
-  std::string m_inputXTClusterKey; // chave dos clusters XT em memoria
-  std::string m_inputXTRingerL0Key; // chave dos aneis L0 XT em memoria
-  std::string m_inputXTElectronKey; // chave dos eletrons XT em memoria
-  std::string m_inputTruthRingerL0Key; // chave dos aneis L0 da verdade
+  std::string m_inputXTCellsKey;
+  std::string m_inputXTClusterKey;
+  std::string m_inputXTRingerL0Key;
+  std::string m_inputXTElectronKey;
+  std::string m_inputTruthRingerL0Key;
 
   std::string m_outputCellsKey;
   std::string m_outputEventKey;
@@ -128,21 +128,21 @@ private:
   std::string m_outputTruthClusterKey;
   std::string m_outputTruthRingerKey;
   std::string m_outputTruthElectronKey;
-  std::string m_outputXTCellsKey; // chave dos ramos de celulas XT
-  std::string m_outputXTClusterKey; // chave do ramo de clusters XT
-  std::string m_outputXTRingerL0Key; // chave do ramo de aneis L0 XT
-  std::string m_outputXTElectronKey; // chave do ramo de eletrons XT
-  std::string m_outputTruthRingerL0Key; // chave do ramo de aneis L0 da verdade
+  std::string m_outputXTCellsKey;
+  std::string m_outputXTClusterKey;
+  std::string m_outputXTRingerL0Key;
+  std::string m_outputXTElectronKey;
+  std::string m_outputTruthRingerL0Key;
 
   std::vector<std::string> m_inputRingerKeys;
   std::vector<std::string> m_outputRingerKeys;
   std::vector<std::string> m_inputTruthRingerKeys;
   std::vector<std::string> m_outputTruthRingerKeys;
-  std::vector<std::string> m_inputXTRingerKeys; // chaves dos aneis XT em memoria
-  std::vector<std::string> m_outputXTRingerKeys; // chaves dos ramos de aneis XT
+  std::vector<std::string> m_inputXTRingerKeys;
+  std::vector<std::string> m_outputXTRingerKeys;
 
   bool m_dumpCells;
-  bool m_dumpXTCells; // controla a gravacao do caminho XT
+  bool m_dumpXTCells;
   int m_outputLevel;
 };
 

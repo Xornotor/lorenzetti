@@ -54,11 +54,11 @@ RootStreamNtupleMaker::RootStreamNtupleMaker(std::string name) : IMsgService(nam
   declareProperty("InputTruthRingerKeys", m_truthRingerKeys = {"TruthRings"});
   declareProperty("InputTruthElectronKey", m_truthElectronKey = "TruthElectrons");
   declareProperty("InputElectronKey", m_electronKey = "Electrons");
-  declareProperty("InputXTClusterKey", m_xtClusterKey = "XTClusters"); // recebe os clusters XT
-  declareProperty("InputXTRingerKeys", m_xtRingerKeys = {"XTRings"}); // recebe as topologias XT
-  declareProperty("InputXTRingerL0Key", m_xtRingerL0Key = "XTRingsL0"); // recebe os aneis L0 XT
-  declareProperty("InputXTElectronKey", m_xtElectronKey = "XTElectrons"); // recebe os eletrons XT
-  declareProperty("DumpCrossTalkCells", m_doCrosstalk = false); // habilita as colunas XT
+  declareProperty("InputXTClusterKey", m_xtClusterKey = "XTClusters");
+  declareProperty("InputXTRingerKeys", m_xtRingerKeys = {"XTRings"});
+  declareProperty("InputXTRingerL0Key", m_xtRingerL0Key = "XTRingsL0");
+  declareProperty("InputXTElectronKey", m_xtElectronKey = "XTElectrons");
+  declareProperty("DumpCrossTalkCells", m_doCrosstalk = false);
   declareProperty("OutputLevel", m_outputLevel = 0);
   declareProperty("OutputNtupleName", m_outputNtupleName = "events");
 }
@@ -200,7 +200,7 @@ StatusCode RootStreamNtupleMaker::bookHistograms(EventContext &ctx) const
   std::vector<float> *mc_et = nullptr;
   std::vector<std::vector<float> *> ring_holders(m_ringerKeys.size(), nullptr);
   std::vector<std::vector<float> *> truth_ring_holders(m_truthRingerKeys.size(), nullptr);
-  bool xt_found = false; // indica se a linha normal tem um cluster XT correspondente
+  bool xt_found = false;
   float xt_cl_eta = 0;
   float xt_cl_phi = 0;
   float xt_cl_e = 0;
@@ -244,8 +244,8 @@ StatusCode RootStreamNtupleMaker::bookHistograms(EventContext &ctx) const
   bool xt_el_medium = false;
   bool xt_el_loose = false;
   bool xt_el_vloose = false;
-  std::vector<float> *xt_cl_ringsL0 = nullptr; // guarda os aneis L0 do cluster XT
-  std::vector<std::vector<float> *> xt_ring_holders(m_xtRingerKeys.size(), nullptr); // guarda as topologias XT
+  std::vector<float> *xt_cl_ringsL0 = nullptr;
+  std::vector<std::vector<float> *> xt_ring_holders(m_xtRingerKeys.size(), nullptr);
 
   TTree *tree = new TTree(m_outputNtupleName.c_str(), "");
 
@@ -300,7 +300,7 @@ StatusCode RootStreamNtupleMaker::bookHistograms(EventContext &ctx) const
   tree->Branch("el_loose", &el_loose);
   tree->Branch("el_vloose", &el_vloose);
 
-  if (m_doCrosstalk) // cria as colunas XT apenas para ntuples com crosstalk
+  if (m_doCrosstalk)
   {
     tree->Branch("xt_found", &xt_found);
     tree->Branch("xt_cl_eta", &xt_cl_eta);
@@ -493,9 +493,9 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
   SG::ReadHandle<xAOD::CaloClusterContainer> truth_cluster_container(m_truthClusterKey, ctx);
   // SG::ReadHandle<xAOD::CaloRingsContainer> truth_ringer_container(m_truthRingerKey, ctx);
   SG::ReadHandle<xAOD::ElectronContainer> truth_electron_container(m_truthElectronKey, ctx);
-  SG::ReadHandle<xAOD::CaloClusterContainer> xt_cluster_container(m_xtClusterKey, ctx); // recebe os clusters XT
-  SG::ReadHandle<xAOD::ElectronContainer> xt_electron_container(m_xtElectronKey, ctx); // recebe os eletrons XT
-  SG::ReadHandle<xAOD::CaloRingsContainer> xt_ringerL0_container(m_xtRingerL0Key, ctx); // recebe os aneis L0 XT
+  SG::ReadHandle<xAOD::CaloClusterContainer> xt_cluster_container(m_xtClusterKey, ctx);
+  SG::ReadHandle<xAOD::ElectronContainer> xt_electron_container(m_xtElectronKey, ctx);
+  SG::ReadHandle<xAOD::CaloRingsContainer> xt_ringerL0_container(m_xtRingerL0Key, ctx);
   if (m_doCrosstalk && (!xt_cluster_container.isValid() || !xt_electron_container.isValid() || !xt_ringerL0_container.isValid()))
   {
     MSG_ERROR("Missing XT clusters, electrons or L0 rings in the AOD");
@@ -614,7 +614,7 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
   bool truth_el_medium = false;
   bool truth_el_loose = false;
   bool truth_el_vloose = false;
-  bool xt_found = false; // indica se o cluster XT correspondente foi encontrado
+  bool xt_found = false;
   float xt_cl_eta = 0;
   float xt_cl_phi = 0;
   float xt_cl_e = 0;
@@ -770,7 +770,7 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
   InitBranch(tree, "truth_el_loose", &truth_el_loose);
   InitBranch(tree, "truth_el_vloose", &truth_el_vloose);
 
-  if (m_doCrosstalk) // liga os ramos XT do ntuple as variaveis do evento
+  if (m_doCrosstalk)
   {
     InitBranch(tree, "xt_found", &xt_found);
     InitBranch(tree, "xt_cl_eta", &xt_cl_eta);
@@ -1110,7 +1110,7 @@ StatusCode RootStreamNtupleMaker::fillHistograms(EventContext &ctx) const
       }
     }
 
-    if (m_doCrosstalk) // preenche o caminho XT correspondente a Seed da linha normal
+    if (m_doCrosstalk)
     {
       xt_found = false;
       xt_cl_eta = 0;

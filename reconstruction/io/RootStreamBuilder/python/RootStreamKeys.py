@@ -12,35 +12,35 @@ valid_keys = [
     "Seeds",
     "Clusters",
     "TruthClusters",
-    "XTClusters",  # acrescentei o do XT
+    "XTClusters",
     "Particles",
     "TruthParticles",
     # CaloRingsBuilder
     "Rings",
-    "XTRings",  # acrescentei os aneis XT da topologia padrao
+    "XTRings",
     "RingsSigmaNoise",
     "TruthRings",
     "AsymRings",
     "TruthAsymRings",
-    "XTAsymRings",  # acrescentei os aneis Asym do XT
+    "XTAsymRings",
     "CornerRings",
     "TruthCornerRings",
-    "XTCornerRings",  # acrescentei os aneis Corner do XT
+    "XTCornerRings",
     "StripsRings",
     "TruthStripsRings",
-    "XTStripsRings",  # acrescentei os aneis Strips do XT
+    "XTStripsRings",
     "CrossRings",
     "TruthCrossRings",
-    "XTCrossRings",  # acrescentei os aneis Cross do XT
+    "XTCrossRings",
     "CustomRings",
     "TruthCustomRings",
-    "XTCustomRings",  # acrescentei os aneis Custom do XT
+    "XTCustomRings",
     "Electrons",
     "TruthElectrons",
-    "XTElectrons",  # acrescentei o do XT
+    "XTElectrons",
     "RingsL0",
     "TruthRingsL0",
-    "XTRingsL0",  # acrescentei o do XT
+    "XTRingsL0",
 ]
 
 
