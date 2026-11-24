@@ -1,6 +1,10 @@
 
 #include "helper.h"
 #include <math.h>
+#include <set>
+#include <iostream>
+#include "TDatabasePDG.h"
+#include "TParticlePDG.h"
 
 namespace generator{
 
@@ -30,7 +34,7 @@ namespace generator{
         };
         // A particle is invisible if in current table of such.
         bool isVisibleSave = true;
-        int idSave = particle->pid();
+        int idSave = std::abs(particle->pid());   // the table has the particles only: antineutrinos are invisible too
         for (int i = 0; i < INVISIBLENUMBER; ++i) 
             if (idSave == INVISIBLETABLE[i]) isVisibleSave = false;
 
@@ -54,12 +58,23 @@ namespace generator{
 
       float et(const HepMC3::GenParticle *particle){
         float eta = particle->momentum().eta();
-        float et = eta != 0.0 ? (particle->momentum().e())/cosh(std::abs(eta)) : 0.0;
+        float et = (particle->momentum().e())/cosh(eta);   // at eta = 0, Et = E (it was 0)
         return et;
       }
 
+      // Electric charge from the ROOT PDG table (TDatabasePDG, charge in units of |e|/3).
+      // Codes unknown to the table are treated as charged, with one warning per code.
       bool isCharged(const HepMC3::GenParticle *particle){
-        return particle->pid() > 0? false : true;
+        const int pdg = particle->pid();
+        const TParticlePDG *info = TDatabasePDG::Instance()->GetParticle(pdg);
+        if (!info) {
+          static std::set<int> warned;
+          if (warned.insert(pdg).second)
+            std::cerr << "ParticleHelper::isCharged: PDG code " << pdg
+                      << " not in TDatabasePDG, treated as charged" << std::endl;
+          return true;
+        }
+        return info->Charge() != 0;
       }
 
 

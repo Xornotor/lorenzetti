@@ -134,12 +134,16 @@ StatusCode EventTape::execute()
     generator::Event event;
 
     try {  
-      // Loop over all physcis tools
+      // Loop over all physcis tools; a failure restarts the event (before, it went on to the next tool and wrote the partial event)
+      bool failed = false;
       for (auto& alg : m_algs ){
         if ( alg->execute(event).isFailure() )
         {
-          --iEvent; continue;
+          failed = true; break;
         }
+      }
+      if (failed){
+        --iEvent; continue;
       }
 
     } catch ( NotInterestingEvent ){
@@ -187,6 +191,7 @@ void EventTape::clear()
 {
   // Clear the ntuple vectors
   m_p_isMain->clear();
+  m_p_seed_id->clear();
   m_p_pdg_id->clear(); 
   m_p_bc_id->clear();
   m_p_px->clear(); 

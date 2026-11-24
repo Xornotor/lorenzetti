@@ -41,6 +41,7 @@ StatusCode Pythia8Gen::initialize()
   m_gun.readString(cmdseed.str());
 
   m_nAbort = m_gun.mode("Main:timesAllowErrors");
+  m_iAbort = 0;
   // Initialization for main (LHC) event
   m_gun.init();
   m_nEvent = 0;
@@ -58,6 +59,7 @@ StatusCode Pythia8Gen::execute(HepMC3::GenEvent &evt)
       MSG_ERROR("Event generation aborted prematurely, owing to error in main event!");
       throw AbortPrematurely();
     }
+    return StatusCode::FAILURE;   // the event is incomplete: the caller generates another one
   }
 
   float weight = m_gun.info.mergingWeight();
@@ -94,9 +96,12 @@ float Pythia8Gen::random_flat()
   return m_gun.rndm.flat();
 }
 
+// Standard normal number (mean 0, width 1): Pythia's rndm.gauss() already has unit width.
+// Dividing it by sqrt(2*pi), as before, made every Gaussian draw (vertex z and t spread,
+// pileup average spread) 2.5 times narrower than declared.
 float Pythia8Gen::random_gauss()
 {
-  return m_gun.rndm.gauss() / sqrt(2 * M_PI);
+  return m_gun.rndm.gauss();
 }
 
 void Pythia8Gen::clear()
