@@ -249,18 +249,20 @@ StatusCode RootStreamESDReader::deserialize( int evt, EventContext &ctx ) const
     }
       
     // deserialize XT Cells
-    if (m_doCrosstalk){
+    if (m_doCrosstalk && collection_xtcells && collection_xtdescriptor){
       MSG_INFO("Reading crosstalk cells with key "<< m_xtcellsKey <<" (DoCrosstalk="<<m_doCrosstalk <<").");
-      std::map<int, xAOD::CaloDetDescriptor*> xtdescriptor_links;
+      xAOD::descriptor_links_t xtdescriptor_links;
+      SG::WriteHandle<xAOD::CaloDetDescriptorContainer> xtdesc_container( m_xtcellsKey+"_Aux", ctx );
+      xtdesc_container.record( std::unique_ptr<xAOD::CaloDetDescriptorContainer>(new xAOD::CaloDetDescriptorContainer()) );
 
-      int xtlink=0;
       for (auto &descriptor_t : *collection_xtdescriptor )
       {
+        if ( xtdescriptor_links.count(descriptor_t.hash) ) continue;
         xAOD::CaloDetDescriptor *descriptor = nullptr;
         xAOD::CaloDetDescriptorConverter cnv;
         cnv.convert(descriptor_t, descriptor); // alloc memory
-        xtdescriptor_links[xtlink] = descriptor;
-        xtlink++;
+        xtdescriptor_links[descriptor->hash()] = descriptor;
+        xtdesc_container->push_back(descriptor);
       }
 
       SG::WriteHandle<xAOD::CaloCellContainer> xtcontainer(m_xtcellsKey, ctx);
@@ -268,11 +270,14 @@ StatusCode RootStreamESDReader::deserialize( int evt, EventContext &ctx ) const
 
       for( auto &cell_t : *collection_xtcells )
       {
-        xAOD::CaloCell *cell = nullptr;
-        xAOD::CaloCellConverter cnv;
-        cnv.convert(cell_t, cell); // alloc memory
-        cell->setDescriptor( xtdescriptor_links[cell_t.descriptor_link] );
-        xtcontainer->push_back(cell);
+        if ( xtdescriptor_links.count(cell_t.descriptor_link) )
+        {
+          xAOD::CaloCell *cell = nullptr;
+          xAOD::CaloCellConverter cnv;
+          cnv.convert(cell_t, cell); // alloc memory
+          cell->setDescriptor( xtdescriptor_links[cell_t.descriptor_link] );
+          xtcontainer->push_back(cell);
+        }
       }
     } // end-if doCrosstalk
   }
