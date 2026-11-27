@@ -44,8 +44,7 @@ CaloHit::CaloHit(     float eta,
 
 void CaloHit::clear()
 {
-  m_edep.clear(); // zeroize deposit energy for all bunches
-  m_tof.clear(); // clear tof for all the bunches
+  m_edep.clear(); // zeroize deposit energy for all bunchs
   m_edepPmt[0].clear();
   m_edepPmt[1].clear();
 }
@@ -71,7 +70,6 @@ void CaloHit::fill( const G4Step* step )
   G4StepPoint* point = step->GetPreStepPoint();
   // Get the particle time
   float t = (float)point->GetGlobalTime() / ns;
-  float t_corrected = (point->GetGlobalTime() - (point->GetPosition().mag()/c_light) )/ ns; // rough correction for event-clock relative tof
 
   // Get the bin index into the time vector
   int samp = find(t);
@@ -81,14 +79,7 @@ void CaloHit::fill( const G4Step* step )
     // cout << "sampling: "<< m_sampling << ", BCID: "<< bcid << ", samp: " << samp << ", HIT: " << m_hash << ", t: " << t << ", edep: "<< edep << ", m_edep[bcid]="<< m_edep[bcid] << ", m_tof[bcid]="<< m_tof[bcid] << "\n"; // 
 
     m_edep[bcid]  +=  (edep/MeV);
-    // m_tof[bcid]   =   t; // the TOF comes from the last hit
-    if ((m_edep[bcid] > 0.) && (!m_firstHit)){
-      m_tof[bcid]   = t_corrected;   // the TOF comes from the first hit
-      m_firstHit    = true;
-    }
-    else if ((m_edep[bcid] > 0.) && (t_corrected < m_tof[bcid]) ){
-      m_tof[bcid]   = t_corrected;   // the TOF comes from the first hit (in time)
-    }
+    m_tof[bcid]   =   t; // the TOF comes from the last hit
 
   }
 }
@@ -102,12 +93,8 @@ void CaloHit::fill( const G4Step* step , float sampNoiseStd)
 void CaloHit::fill( const G4Step* step , float sampNoiseStd, float edep)
 {
   G4StepPoint* point = step->GetPreStepPoint();
-
-  float t = (float)point->GetGlobalTime() / ns;
-  float t_corrected = (point->GetGlobalTime() - (point->GetPosition().mag()/c_light) )/ ns; // rough correction for event-clock relative tof
-
   // Get the particle time
-  fillAt( t_corrected, sampNoiseStd, edep );
+  fillAt( (float)point->GetGlobalTime() / ns, sampNoiseStd, edep );
 }
 
 void CaloHit::fillPmtAt( float t0, float edep_pmt0, float t1, float edep_pmt1 )
