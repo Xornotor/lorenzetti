@@ -42,11 +42,6 @@ class RootStreamAODReader(Cpp):
         self.setProperty("OutputElectronKey", OutputElectronKey)
         self.setProperty("OutputTruthClusterKey", OutputTruthClusterKey)
         self.setProperty("OutputTruthElectronKey", OutputTruthElectronKey)
-        self.setProperty("OutputXTCellsKey", OutputXTCellsKey)
-        self.setProperty("OutputXTClusterKey", OutputXTClusterKey)
-        self.setProperty("OutputXTRingerKeys", OutputXTRingerKeys)
-        self.setProperty("OutputXTRingerL0Key", OutputXTRingerL0Key)
-        self.setProperty("OutputXTElectronKey", OutputXTElectronKey)
         self.setProperty("DumpCrossTalkCells", DumpCrossTalkCells)
 
         # Novas propriedades de listas (Múltiplas coleções)
@@ -57,6 +52,13 @@ class RootStreamAODReader(Cpp):
         self.setProperty("OutputLevel", OutputLevel)
         self.setProperty("NtupleName", NtupleName)
         self.setProperty("InputFile", InputFile)
+
+        if(DumpCrossTalkCells):
+            self.setProperty("OutputXTCellsKey", OutputXTCellsKey)
+            self.setProperty("OutputXTClusterKey", OutputXTClusterKey)
+            self.setProperty("OutputXTRingerKeys", OutputXTRingerKeys)
+            self.setProperty("OutputXTRingerL0Key", OutputXTRingerL0Key)
+            self.setProperty("OutputXTElectronKey", OutputXTElectronKey)
 
         f = ROOT.TFile(self.InputFile, "read")
         t = f.Get(self.NtupleName)

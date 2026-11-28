@@ -21,10 +21,12 @@ class CaloCellMerge( Cpp ):
     Cpp.__init__(self, ROOT.CaloCellMerge(name) )
     # Create the algorithm
     self.setProperty( "InputCollectionKeys"   , InputCollectionKeys   )
-    self.setProperty( "InputXTCollectionKeys" , InputXTCollectionKeys ) 
     self.setProperty( "InputHitsKey"          , InputHitsKey          )
     self.setProperty( "OutputCellsKey"        , OutputCellsKey        ) 
     self.setProperty( "OutputTruthCellsKey"   , OutputTruthCellsKey   ) 
-    self.setProperty( "OutputXTCellsKey"      , OutputXTCellsKey      )
     self.setProperty( "DumpCrossTalkCells"    , DumpCrossTalkCells    )
     self.setProperty( "OutputLevel"           , OutputLevel           ) 
+
+    if DumpCrossTalkCells:
+        self.setProperty( "InputXTCollectionKeys" , InputXTCollectionKeys ) 
+        self.setProperty( "OutputXTCellsKey"      , OutputXTCellsKey      )

@@ -292,10 +292,13 @@ StatusCode RootStreamAODMaker::serialize(EventContext &ctx) const
   InitBranch(tree, ("CaloClusterContainer_" + m_outputTruthClusterKey).c_str(), &container_clus_truth);
   InitBranch(tree, ("ElectronContainer_" + m_outputTruthElectronKey).c_str(), &container_electron_truth);
   InitBranch(tree, ("CaloRingsContainer_" + m_outputTruthRingerL0Key).c_str(), &container_ringsL0_truth);
+
   if (m_dumpXTCells)
   {
-    InitBranch(tree, ("CaloCellContainer_" + m_outputXTCellsKey).c_str(), &container_xtcells);
-    InitBranch(tree, ("CaloDetDescriptorContainer_" + m_outputXTCellsKey).c_str(), &container_xtdescriptor);
+    if(m_dumpCells){
+      InitBranch(tree, ("CaloCellContainer_" + m_outputXTCellsKey).c_str(), &container_xtcells);
+      InitBranch(tree, ("CaloDetDescriptorContainer_" + m_outputXTCellsKey).c_str(), &container_xtdescriptor);
+    }
     InitBranch(tree, ("CaloClusterContainer_" + m_outputXTClusterKey).c_str(), &container_xt_clus);
     InitBranch(tree, ("CaloRingsContainer_" + m_outputXTRingerL0Key).c_str(), &container_xt_ringsL0);
     InitBranch(tree, ("ElectronContainer_" + m_outputXTElectronKey).c_str(), &container_xt_electron);
